@@ -1,0 +1,29 @@
+@use "./colors" as *;
+@use "./spacing" as *;
+@use "./radius" as *;
+@use "./typography" as *;
+
+/* =========================================
+   TOKENS DERIVADOS (não duplicar cores/spacing/typo aqui)
+========================================= */
+
+/* Gradientes */
+$gradient-brand: linear-gradient(
+  90deg,
+  $color-primary 0%,
+  $color-secondary 38%,
+  $color-primary 76%,
+  $color-secondary 100%
+);
+
+/* Sombras */
+$shadow-card: 0 10px 30px rgba(0, 0, 0, 0.08);
+$shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.2);
+
+/* Transições */
+$transition-fast: 150ms ease;
+$transition-base: 250ms ease;
+
+/* Bordas padrão */
+$border-thin: 1px solid $color-border-input;
+$border-focus: 1px solid $color-border-focus;

@@ -1,19 +1,11 @@
-@use "@/styles/colors" as *;
-@use "@/styles/typography" as *;
-@use "@/styles/spacing" as *;
-@use "@/styles/radius" as *;
-@use "@/styles/mixins" as *;
+@use "../../styles" as *;
 
-body {
-  margin: 0;
-}
+
 
 .container {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1.2fr 1fr;
-  background: $color-background;
-  font-family: $font-family-base;
   color: $color-text-primary;
 }
 

@@ -1,0 +1,139 @@
+@use "../styles" as *;
+
+.container {
+  min-height: 100vh;
+  background: radial-gradient(circle at bottom,
+      rgba(0, 74, 173, 0.35),
+      transparent 60%),
+    #1e1e1e;
+
+
+}
+
+/* HEADER */
+.header {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+.nav {
+  display: flex;
+  gap: 28px;
+
+  a {
+    font-size: 14px;
+    color: #bdbdbd;
+    cursor: pointer;
+
+    &:hover {
+      color: #ffffff;
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+}
+
+.link {
+  color: #bdbdbd;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.primary {
+  background: #004aad;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 14px;
+}
+
+/* HERO */
+.hero {
+  max-width: 900px;
+  margin: 120px auto 0;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.hero h1 {
+  font-size: 52px;
+  font-weight: 600;
+  margin-bottom: 16px;
+
+  background: linear-gradient(
+    90deg,
+    #004aad 0%,
+    #0795ff 38%,
+    #004aad 76%,
+    #0795ff 100%
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  background-clip: text;
+  color: transparent;
+}
+
+
+.subtitle {
+  font-size: 25px;
+  margin-bottom: 12px;
+}
+
+.description {
+  font-size: 14px;
+  color: #b0b0b0;
+  max-width: 520px;
+  margin: 0 auto 36px;
+}
+
+/* CTA */
+.cta {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.outline {
+  background: black;
+  border: 2px solid $color-text-primary;
+  color: $color-text-primary;
+  border-radius: 999px;
+  padding: 10px 22px;
+  cursor: pointer;
+   &:hover{
+    color: white;
+  }
+
+}
+
+.primary {
+  background: black;
+  border-radius: 999px;
+  padding: 10px 22px;
+  cursor: pointer;
+  background:
+    linear-gradient(black) padding-box,
+    linear-gradient(
+      90deg,
+      #004aad 0%,
+      #0795ff 38%,
+      #004aad 76%,
+      #0795ff 100%
+    ) border-box;
+
+  border: 2px solid transparent;
+
+  &:hover{
+    color: white;
+  }
+}
