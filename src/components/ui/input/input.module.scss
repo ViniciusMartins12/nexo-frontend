@@ -1,0 +1,60 @@
+@use "@/styles/colors" as *;
+@use "@/styles/radius" as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 14px;
+  color: $color-text-primary;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: $color-surface-input;
+  border: 1px solid;
+  border-radius: $radius-md;
+  padding: 10px 12px;
+
+  &:focus-within {
+    border-color: $color-primary;
+  }
+}
+
+.invalid {
+  border-color: $color-border-error;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+
+  color: #fff;        // letras
+  caret-color: #fff;  // cursor
+
+  font-size: 16px;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+.toggle {
+  all: unset;
+  cursor: pointer;
+  font-size: 16px;
+  color: #fff;
+}
+
+.errorText {
+  font-size: 12px;
+  color: $color-border-error;
+}
