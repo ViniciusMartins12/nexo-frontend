@@ -22,7 +22,7 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    try {
+      try {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -36,7 +36,13 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      const data = await res.json().catch(() => ({}));
+      const userType = data?.type ?? "company";
+      if (userType === "candidate") {
+        router.push("/candidato/processos");
+      } else {
+        router.push("/dashboard");
+      }
     } catch {
       setErrorMsg("Erro de conexão com o servidor");
     } finally {
@@ -107,9 +113,9 @@ export default function LoginPage() {
 
         <div className={styles.footerForm}>
           <p>
-            Não tem conta?{" "}
-            <a href="/register-account" className={styles.footerlink}>
-              Crie agora mesmo
+            Sou candidato e ainda não tenho conta.{" "}
+            <a href="/cadastro-candidato" className={styles.footerlink}>
+              Fazer cadastro
             </a>
           </p>
         </div>

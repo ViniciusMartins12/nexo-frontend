@@ -1,0 +1,6 @@
+@use "../../../styles/" as *;
+.container{
+    background-color: $background-primary;
+    padding: 24px;
+    border-radius: 30px;
+}

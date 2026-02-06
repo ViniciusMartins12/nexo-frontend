@@ -30,27 +30,21 @@
   border-color: $color-border-error;
 }
 
-.input {
+.select {
   flex: 1;
   border: none;
   outline: none;
   background: transparent;
 
-  color: #fff;        // letras
-  caret-color: #fff;  // cursor
-
-  font-size: 16px;
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-  }
-}
-
-.toggle {
-  all: unset;
-  cursor: pointer;
-  font-size: 16px;
   color: #fff;
+  font-size: 16px;
+
+  appearance: none; // remove seta padrão
+  cursor: pointer;
+
+  option {
+    color: #000; // evita option invisível no dark
+  }
 }
 
 .errorText {

@@ -1,0 +1,232 @@
+@use "../../../../styles" as *;
+
+.section {
+  padding: 0 0 48px;
+}
+
+.loading,
+.errorMsg {
+  font-size: 0.9375rem;
+  color: $color-text-placeholder;
+  margin: 0 0 16px;
+}
+
+.errorMsg {
+  color: $color-text-error;
+}
+
+.backLink {
+  display: inline-block;
+  font-size: 0.9375rem;
+  color: $color-secondary;
+  text-decoration: none;
+  margin-bottom: 24px;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: $color-text-primary;
+}
+
+.subtitle {
+  font-size: 0.9375rem;
+  color: $color-text-placeholder;
+  margin: 0 0 24px;
+}
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.stepTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: $color-text-placeholder;
+  background: $background-secondary;
+  border: 1px solid $color-border-input;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.stepTab:hover {
+  color: $color-text-primary;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.stepTab.active {
+  color: $color-secondary;
+  background: rgba(0, 74, 173, 0.15);
+  border-color: $color-primary;
+}
+
+.stepTab.done {
+  color: $color-text-primary;
+}
+
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 0.8125rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.stepTab.active .stepNum {
+  background: $color-primary;
+  color: #fff;
+}
+
+.panel {
+  background: $background-secondary;
+  border-radius: 8px;
+  padding: 24px;
+  border: 1px solid $color-border-input;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: $color-text-primary;
+}
+
+.formDesc {
+  font-size: 0.9375rem;
+  color: $color-text-placeholder;
+  margin: 0 0 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.familiarCard {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  color: $color-text-primary;
+  background: $color-surface-input;
+  border: 1px solid $color-border-input;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.textarea::placeholder {
+  color: $color-text-placeholder;
+}
+
+.uploadBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.fileLabel {
+  display: block;
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 0.9375rem;
+  color: $color-secondary;
+  background: rgba(0, 74, 173, 0.2);
+  border: 1px dashed $color-primary;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fileButton:hover {
+  background: rgba(0, 74, 173, 0.3);
+}
+
+.docList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.docListTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: 8px;
+}
+
+.docItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 0.875rem;
+  border-bottom: 1px solid $color-border-input;
+}
+
+.docLabel {
+  font-weight: 500;
+  color: $color-text-primary;
+  min-width: 160px;
+}
+
+.docName {
+  color: $color-text-placeholder;
+}

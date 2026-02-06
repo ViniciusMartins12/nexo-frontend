@@ -1,0 +1,58 @@
+@use "../../../styles" as *;
+
+.header {
+  height: 64px;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background-color: $background-primary;
+  color: $color-text-primary;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.left,
+.rigth {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+
+.boxInitial{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+}
+
+.menu {
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav {
+  display: flex;
+  gap: 16px;
+}
+
+.nav a {
+  color: $color-text-primary;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.nav a:hover {
+  color: $color-secondary;
+}

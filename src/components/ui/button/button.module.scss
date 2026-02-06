@@ -46,7 +46,7 @@
   color: #fff;
 
   &:hover:not(:disabled) {
-    background: darken($color-primary, 8%);
+    background: #003d8f; /* darken(#004AAD, 8%) - Sass não aplica darken a var() */
   }
 }
 
@@ -55,7 +55,7 @@
   color: #fff;
 
   &:hover:not(:disabled) {
-    background: darken($color-secondary, 8%);
+    background: #0670d9; /* darken(#0795FF, 8%) */
   }
 }
 
@@ -70,11 +70,12 @@
 }
 
 .danger {
-  background: $color-primary;
-  color: $color-text-primary;
+  background: transparent;
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.5);
 
   &:hover:not(:disabled) {
-    background: darken($color-primary, 8%);
+    background: rgba(248, 113, 113, 0.15);
   }
 }
 

@@ -1,0 +1,227 @@
+@use "../../../styles/" as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center; // centraliza vertical
+  justify-content: center; // centraliza horizontal
+  background: rgba(0, 0, 0, 0.4); // opcional
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form {
+  gap: 16px;
+  display: grid;
+}
+
+.wrapperTextarea {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .label {
+    font-size: 14px;
+    color: $color-text-primary;
+  }
+
+  .textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 12px;
+    background: $color-surface-input;
+    border: 1.5px solid $color-border-input;
+    border-radius: $radius-md;
+    color: #fff;
+    font-size: 16px;
+    resize: vertical;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+}
+
+.menu {
+  width: 70%;
+  min-height: 70vh;
+  background: $color-background;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  gap: 16px;
+
+  nav {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .line {
+    border-top: 1px solid #333;
+    margin: 16px 0;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  a:hover {
+    opacity: 0.7;
+  }
+
+  .error {
+    color: $color-text-error;
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+
+  .success {
+    color: $color-secondary;
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .illustration {
+    flex-shrink: 0;
+  }
+
+  .steps {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .stepDot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: $radius-md;
+    background: $background-secondary;
+    font-size: 0.875rem;
+    color: #b0b0b0;
+
+    &.active {
+      background: rgba(0, 74, 173, 0.2);
+      color: $color-secondary;
+    }
+
+    &.done {
+      color: $color-secondary;
+    }
+  }
+
+  .stepNum {
+    font-weight: 600;
+  }
+
+  .stepLabel {
+    white-space: nowrap;
+  }
+
+  .stepContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .stepTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin: 0 0 8px;
+  }
+
+  .stepDesc {
+    font-size: 0.9375rem;
+    color: #b0b0b0;
+    margin: 0;
+  }
+
+  .fileWrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .fileInput {
+    font-size: 14px;
+    color: $color-text-primary;
+  }
+
+  .fileName {
+    font-size: 0.875rem;
+    color: #b0b0b0;
+  }
+
+  .previewWrap {
+    margin-top: 8px;
+  }
+
+  .previewTitle {
+    font-size: 0.875rem;
+    color: $color-text-primary;
+    margin: 0 0 8px;
+  }
+
+  .previewTable {
+    max-height: 200px;
+    overflow: auto;
+    border: 1px solid $color-border-input;
+    border-radius: $radius-md;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    th,
+    td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid $color-border-input;
+    }
+
+    th {
+      background: $background-secondary;
+      color: $color-text-primary;
+      font-weight: 500;
+    }
+
+    td {
+      color: $color-text-primary;
+    }
+  }
+
+  .previewMore {
+    font-size: 0.75rem;
+    color: #b0b0b0;
+    margin: 4px 12px 0;
+  }
+}

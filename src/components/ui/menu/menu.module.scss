@@ -1,0 +1,71 @@
+@use "../../../styles" as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: auto;
+  background: $background-primary;
+  padding: 24px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  margin: 84px 24px;
+  border-radius: 8px;
+  color: $color-text-primary;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  nav {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .line {
+    border-top: 1px solid $background-secondary;
+    margin: 16px 0;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    color: inherit;
+  }
+
+  a:hover {
+    opacity: 0.7;
+  }
+
+  .themeToggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .themeToggle:hover {
+    opacity: 0.8;
+  }
+
+  .sunIcon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+}

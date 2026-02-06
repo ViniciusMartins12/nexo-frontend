@@ -1,0 +1,31 @@
+@use "../../styles" as *;
+
+.hero {
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: $color-text-primary;
+}
+
+.description {
+  font-size: 1rem;
+  color: $color-text-placeholder;
+  margin: 0;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.link {
+  color: $color-secondary;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

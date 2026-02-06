@@ -4,7 +4,7 @@ import { useState } from "react";
 import styles from "./input.module.scss";
 import Image from "next/image";
 
-type InputVariant = "text" | "email" | "password";
+type InputVariant = "text" | "email" | "password" | "date";
 
 type InputProps = {
   label?: string;

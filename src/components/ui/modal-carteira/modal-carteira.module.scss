@@ -1,0 +1,267 @@
+@use "../../../styles/" as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.panel {
+  width: 92%;
+  max-width: 720px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: $color-background;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stepDot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: $radius-md;
+  background: $background-secondary;
+  font-size: 0.875rem;
+  color: #b0b0b0;
+  transition: background 0.2s, color 0.2s;
+
+  &.active {
+    background: rgba(0, 74, 173, 0.2);
+    color: $color-secondary;
+  }
+
+  &.done {
+    color: $color-secondary;
+  }
+}
+
+.stepNum {
+  font-weight: 600;
+}
+
+.stepLabel {
+  white-space: nowrap;
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stepDesc {
+  font-size: 0.9375rem;
+  color: #b0b0b0;
+  margin: 0;
+}
+
+.wrapperTextarea {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .label {
+    font-size: 14px;
+    color: $color-text-primary;
+  }
+
+  .textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    background: $color-surface-input;
+    border: 1.5px solid $color-border-input;
+    border-radius: $radius-md;
+    color: #fff;
+    font-size: 16px;
+    resize: vertical;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+}
+
+.stepActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.optionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid $color-border-input;
+  border-radius: $radius-md;
+  padding: 8px;
+  background: $background-secondary;
+}
+
+/* Seção alunos no step final */
+.alunosSection {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid $color-border-input;
+}
+
+.alunosSectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0 0 12px 0;
+}
+
+.alunosFilterWrap {
+  margin-bottom: 12px;
+}
+
+.alunosTableWrap {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid $color-border-input;
+  border-radius: $radius-md;
+  background: $background-secondary;
+}
+
+.alunosTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid $color-border-input;
+  }
+
+  th {
+    font-weight: 600;
+    color: $color-text-primary;
+    background: rgba(255, 255, 255, 0.04);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    color: $color-text-primary;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.alunosEmpty {
+  padding: 24px;
+  text-align: center;
+  color: $color-text-placeholder;
+  font-size: 0.9375rem;
+}
+
+.colSelect {
+  width: 48px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.rowSelected td {
+  background: rgba(0, 74, 173, 0.12);
+}
+
+.optionItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &.selected {
+    background: rgba(0, 74, 173, 0.15);
+    border: 1px solid $color-primary;
+  }
+
+  &.multiSelect {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+.checkbox {
+  font-size: 1rem;
+  color: $color-text-primary;
+}
+
+.optionName {
+  font-weight: 500;
+  color: $color-text-primary;
+}
+
+.optionMeta {
+  font-size: 0.8125rem;
+  color: #b0b0b0;
+}
+
+.optionEmpty {
+  padding: 24px;
+  text-align: center;
+  color: #b0b0b0;
+  font-size: 0.9375rem;
+}
+
+.error {
+  color: $color-text-error;
+  font-size: 0.875rem;
+  margin: 0;
+}

@@ -1,0 +1,124 @@
+@use "../../styles" as *;
+
+.container {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  color: $color-text-primary;
+}
+
+.art {
+  position: relative;
+  overflow: hidden;
+}
+
+.artImage {
+  object-fit: cover;
+  transform: translateX(-12%);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 420px;
+  width: 100%;
+  padding: 32px;
+  margin: 0 auto;
+  text-align: left;
+  gap: 12px;
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: $color-text-primary;
+}
+
+.desc {
+  font-size: 0.9375rem;
+  color: $color-text-placeholder;
+  margin: 0 0 16px;
+}
+
+.fields {
+  margin-bottom: 4px;
+}
+
+.stepInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.stepLabel {
+  font-size: 0.875rem;
+  color: $color-text-placeholder;
+}
+
+.backLink {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  color: $color-primary;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.checkMessage {
+  font-size: 0.9375rem;
+  color: $color-text-primary;
+  margin: 0;
+  padding: 12px;
+  background: rgba($color-primary, 0.1);
+  border-radius: $radius-md;
+}
+
+.errorText {
+  font-size: 0.875rem;
+  color: $color-text-error;
+  margin: 0;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: $color-text-placeholder;
+  margin: 0;
+}
+
+.footerForm {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid $color-border-input;
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: $color-text-placeholder;
+  }
+}
+
+.footerlink {
+  font-weight: 600;
+  color: $color-primary;
+  text-decoration: none;
+}
+
+.footerlink:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,26 @@
+@use "../../styles" as *;
+
+.wrapper {
+  min-height: 100vh;
+  background: var(--color-background);
+  color: $color-text-primary;
+}
+
+.main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+}
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+}
+
+.loading {
+  font-size: 1rem;
+  color: $color-text-placeholder;
+}
