@@ -136,6 +136,44 @@
   flex-shrink: 0;
 }
 
+.loading {
+  color: $color-text-placeholder;
+  padding: 24px 0;
+}
+
+.backLink {
+  display: inline-block;
+  font-size: 0.9375rem;
+  color: $color-primary;
+  text-decoration: none;
+  margin-bottom: 16px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.empty {
+  color: $color-text-placeholder;
+  padding: 24px 0;
+}
+
+.btnAcessar {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  background: $color-primary;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
 .errorMsg {
   text-align: center;
   color: $color-text-error;

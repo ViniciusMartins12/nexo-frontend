@@ -54,9 +54,11 @@ export type CarteiraForEdit = {
   description: string | null;
   responsible_id: string | null;
   responsible_name: string | null;
+  atendente_ids?: string[];
   process_ids: string[];
   process_names: string[];
   participant_ids?: string[];
+  participants?: { id: string; cpf: string; name: string; email: string | null; process_name: string }[];
   created_at: string;
 };
 
@@ -113,6 +115,8 @@ function ModalCarteiraContent({
   setProcessSearch,
   selectedUserId,
   setSelectedUserId,
+  selectedAtendenteIds,
+  toggleAtendenteId,
   selectedProcessIds,
   toggleProcessId,
   onClose,
@@ -137,6 +141,8 @@ function ModalCarteiraContent({
   setProcessSearch: (v: string) => void;
   selectedUserId: string | null;
   setSelectedUserId: (v: string | null) => void;
+  selectedAtendenteIds: string[];
+  toggleAtendenteId: (id: string) => void;
   selectedProcessIds: string[];
   toggleProcessId: (id: string) => void;
   onClose: () => void;
@@ -201,6 +207,7 @@ function ModalCarteiraContent({
         name: name.trim(),
         description: description.trim() || null,
         responsible_id: selectedUserId,
+        atendente_ids: selectedAtendenteIds.length ? selectedAtendenteIds : undefined,
         process_ids: selectedProcessIds.length ? selectedProcessIds : undefined,
         participant_ids: selectedParticipantIds.length ? selectedParticipantIds : undefined,
       };
@@ -307,6 +314,37 @@ function ModalCarteiraContent({
                 </li>
               ))
             )}
+          </ul>
+          <p className={styles.stepDesc}>
+            Opcional: selecione atendentes que poderão ver esta carteira e os alunos.
+          </p>
+          <ul className={styles.optionList}>
+            {filteredUsers
+              .filter((u) => u.id !== selectedUserId)
+              .map((u) => {
+                const isAtendente = selectedAtendenteIds.includes(u.id);
+                return (
+                  <li
+                    key={u.id}
+                    className={`${styles.optionItem} ${styles.multiSelect} ${isAtendente ? styles.selected : ""}`}
+                    onClick={() => toggleAtendenteId(u.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ")
+                        toggleAtendenteId(u.id);
+                    }}
+                  >
+                    <span className={styles.checkbox}>
+                      {isAtendente ? "☑" : "☐"}
+                    </span>
+                    <span className={styles.optionName}>{u.name}</span>
+                    {u.email && (
+                      <span className={styles.optionMeta}>{u.email}</span>
+                    )}
+                  </li>
+                );
+              })}
           </ul>
           <div className={styles.stepActions}>
             <Button variant="ghost" text="Voltar" onClick={prevStep} />
@@ -457,7 +495,14 @@ export function ModalCarteira({
   const [userSearch, setUserSearch] = useState("");
   const [processSearch, setProcessSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedAtendenteIds, setSelectedAtendenteIds] = useState<string[]>([]);
   const [selectedProcessIds, setSelectedProcessIds] = useState<string[]>([]);
+
+  function toggleAtendenteId(id: string) {
+    setSelectedAtendenteIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
   const [participants, setParticipants] = useState<ParticipantItem[]>([]);
   const [alumniFilter, setAlumniFilter] = useState("");
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
@@ -474,12 +519,14 @@ export function ModalCarteira({
       setName(initialCarteira.name);
       setDescription(initialCarteira.description ?? "");
       setSelectedUserId(initialCarteira.responsible_id ?? null);
+      setSelectedAtendenteIds(initialCarteira.atendente_ids ?? []);
       setSelectedProcessIds(initialCarteira.process_ids ?? []);
       setSelectedParticipantIds(initialCarteira.participant_ids ?? []);
     } else {
       setName("");
       setDescription("");
       setSelectedUserId(null);
+      setSelectedAtendenteIds([]);
       setSelectedProcessIds([]);
       setSelectedParticipantIds([]);
     }
@@ -535,6 +582,8 @@ export function ModalCarteira({
               setProcessSearch={setProcessSearch}
               selectedUserId={selectedUserId}
               setSelectedUserId={setSelectedUserId}
+              selectedAtendenteIds={selectedAtendenteIds}
+              toggleAtendenteId={toggleAtendenteId}
               selectedProcessIds={selectedProcessIds}
               toggleProcessId={toggleProcessId}
               onClose={onClose}

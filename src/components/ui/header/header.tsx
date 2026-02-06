@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu } from "../menu/menu";
+import { useUnreadMessages } from "@/lib/UnreadMessagesContext";
 import styles from "./header.module.scss";
 
 type HeaderProps = {
@@ -14,8 +15,10 @@ type HeaderProps = {
 export function Header({ variant = "company" }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { unreadCount } = useUnreadMessages();
 
   const logoHref = variant === "candidate" ? "/candidato" : "/dashboard";
+  const mensagensHref = variant === "candidate" ? "/candidato/mensagens" : "/mensagens";
 
   return (
     <>
@@ -41,6 +44,19 @@ export function Header({ variant = "company" }: HeaderProps) {
         </div>
 
         <div className={styles.rigth}>
+          <Link href={mensagensHref} className={styles.iconLink} aria-label="Mensagens">
+            <Image
+              src="/icons/envelope.svg"
+              alt="Mensagens"
+              width={20}
+              height={20}
+            />
+            {unreadCount > 0 && (
+              <span className={styles.badge} aria-label={`${unreadCount} não lidas`}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </Link>
           <Image
             src="/icons/bell.svg"
             alt="Notificações"

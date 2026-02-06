@@ -4,7 +4,7 @@ import { useState } from "react";
 import styles from "./input.module.scss";
 import Image from "next/image";
 
-type InputVariant = "text" | "email" | "password" | "date";
+type InputVariant = "text" | "email" | "password" | "date" | "number";
 
 type InputProps = {
   label?: string;
@@ -22,9 +22,9 @@ export function Input({
 
   const isPassword = variant === "password";
 
-  function getType() {
-    if (!isPassword) return variant;
-    return showPassword ? "text" : "password";
+  function getType(): React.HTMLInputTypeAttribute {
+    if (isPassword) return showPassword ? "text" : "password";
+    return variant;
   }
 
   function getAutoComplete() {

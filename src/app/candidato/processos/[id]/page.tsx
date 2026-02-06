@@ -9,7 +9,97 @@ import { Button } from "@/components/ui/button/button";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-const STEP_LABELS = ["Dados pessoais", "Familiares", "Renda", "Documentos"];
+// Tipos das seções
+type DadosPessoais = {
+  curso?: string;
+  turno?: "manha" | "tarde" | "noite" | "integral";
+  nome_civil_social?: string;
+  idade?: number | "";
+  genero?: string;
+  rg?: string;
+  estado_civil?: string;
+  email_candidato?: string;
+  menor_18?: boolean;
+  nome_responsavel?: string;
+  grau_parentesco_responsavel?: string;
+  contato_responsavel?: string;
+};
+
+type EnderecoFamilia = {
+  endereco_completo?: string;
+  complemento?: string;
+  bairro?: string;
+  cep?: string;
+  ponto_referencia?: string;
+};
+
+type EnsinoMedio = {
+  tipo_rede?: "integral_publica" | "integral_privada" | "parte_publica_privada";
+};
+
+type MembroFamiliar = {
+  nome_completo: string;
+  grau_parentesco: string;
+  idade: number | "";
+  escolaridade: string;
+};
+
+type DadosFamilia = {
+  membros: MembroFamiliar[];
+  dois_genitores_no_grupo?: boolean;
+  irmaos_fora_residencia?: boolean;
+};
+
+type MembroRenda = {
+  primeiro_nome: string;
+  fonte_renda: string;
+  renda_bruta_mensal: number | "";
+};
+
+type RendaFamiliar = {
+  membros: MembroRenda[];
+};
+
+type BemImovel = {
+  tipo: "casa" | "apartamento" | "terreno";
+  valor_comercial: number | "";
+};
+
+type PatrimonioImoveis = {
+  moradia?: "proprio_quitado" | "financiado" | "alugado" | "cedido";
+  valor_parcela?: number | "";
+  parcelas_restantes?: number | "";
+  valor_aluguel?: number | "";
+  bens: BemImovel[];
+};
+
+type BemMovel = {
+  tipo: string;
+  marca_modelo_ano: string;
+  valor_fipe: number | "";
+  financiado?: boolean;
+  valor_parcela?: number | "";
+  parcelas_restantes?: number | "";
+};
+
+type PatrimonioMoveis = {
+  bens: BemMovel[];
+};
+
+type OutrosPatrimonios = {
+  dinheiro_especie?: number | "";
+  poupanca?: number | "";
+  aplicacoes?: number | "";
+  previdencia_privada?: number | "";
+  consorcios?: number | "";
+  patrimonio_rural?: number | "";
+};
+
+type Declaracoes = {
+  veracidade?: boolean;
+  ciencia_omissao_falsidade?: boolean;
+  aceite_termos?: boolean;
+};
 
 type InscricaoData = {
   process: {
@@ -30,29 +120,45 @@ type InscricaoData = {
   documents: { id: string; documentLabel: string; fileName: string; uploadedAt: string }[];
 };
 
-type FormPessoais = {
-  telefone?: string;
-  endereco?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  estado?: string;
-  cep?: string;
-};
+const TURNOS = [
+  { value: "manha", label: "Manhã" },
+  { value: "tarde", label: "Tarde" },
+  { value: "noite", label: "Noite" },
+  { value: "integral", label: "Integral" },
+] as const;
 
-type Familiar = {
-  nome: string;
-  cpf: string;
-  parentesco: string;
-  data_nascimento?: string;
-  renda?: string;
-};
+const ESTADO_CIVIL = [
+  "Solteiro(a)",
+  "Casado(a)",
+  "União estável",
+  "Viúvo(a)",
+  "Divorciado(a)",
+];
 
-type FormRenda = {
-  renda_total?: string;
-  composicao?: string;
-};
+const GENEROS = ["Feminino", "Masculino", "Não binário", "Outro", "Prefiro não informar"];
+
+const ENSINO_MEDIO_OPCOES = [
+  { value: "integral_publica", label: "Integralmente em rede pública" },
+  { value: "integral_privada", label: "Integralmente em rede privada" },
+  { value: "parte_publica_privada", label: "Parte em rede pública e parte em rede privada" },
+];
+
+const ESCOLARIDADES = [
+  "Fundamental incompleto",
+  "Fundamental completo",
+  "Médio incompleto",
+  "Médio completo",
+  "Superior incompleto",
+  "Superior completo",
+  "Pós-graduação",
+  "Não alfabetizado",
+];
+
+function parseNum(v: unknown): number | "" {
+  if (v === "" || v === null || v === undefined) return "";
+  const n = Number(v);
+  return Number.isFinite(n) ? n : "";
+}
 
 export default function CandidatoProcessoInscricaoPage() {
   const params = useParams();
@@ -64,19 +170,22 @@ export default function CandidatoProcessoInscricaoPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // Form state
-  const [pessoais, setPessoais] = useState<FormPessoais>({});
-  const [familiares, setFamiliares] = useState<Familiar[]>([]);
-  const [renda, setRenda] = useState<FormRenda>({});
+  const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({});
+  const [enderecoFamilia, setEnderecoFamilia] = useState<EnderecoFamilia>({});
+  const [ensinoMedio, setEnsinoMedio] = useState<EnsinoMedio>({});
+  const [dadosFamilia, setDadosFamilia] = useState<DadosFamilia>({ membros: [] });
+  const [rendaFamiliar, setRendaFamiliar] = useState<RendaFamiliar>({ membros: [] });
+  const [patrimonioImoveis, setPatrimonioImoveis] = useState<PatrimonioImoveis>({ bens: [] });
+  const [patrimonioMoveis, setPatrimonioMoveis] = useState<PatrimonioMoveis>({ bens: [] });
+  const [outrosPatrimonios, setOutrosPatrimonios] = useState<OutrosPatrimonios>({});
+  const [declaracoes, setDeclaracoes] = useState<Declaracoes>({});
   const [uploadLabel, setUploadLabel] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!processId) return;
-    fetch(`${API_URL}/candidato/processos/${processId}/inscricao`, {
-      credentials: "include",
-    })
+    fetch(`${API_URL}/candidato/processos/${processId}/inscricao`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Processo não encontrado ou sem acesso");
         return res.json();
@@ -84,9 +193,15 @@ export default function CandidatoProcessoInscricaoPage() {
       .then((d: InscricaoData) => {
         setData(d);
         const fd = d.application?.form_data as Record<string, unknown> | undefined;
-        if (fd?.dados_pessoais) setPessoais((fd.dados_pessoais as FormPessoais) || {});
-        if (fd?.familiares) setFamiliares((fd.familiares as Familiar[]) || []);
-        if (fd?.renda) setRenda((fd.renda as FormRenda) || {});
+        if (fd?.dados_pessoais) setDadosPessoais((fd.dados_pessoais as DadosPessoais) || {});
+        if (fd?.endereco_familia) setEnderecoFamilia((fd.endereco_familia as EnderecoFamilia) || {});
+        if (fd?.ensino_medio) setEnsinoMedio((fd.ensino_medio as EnsinoMedio) || {});
+        if (fd?.dados_familia) setDadosFamilia((fd.dados_familia as DadosFamilia) || { membros: [] });
+        if (fd?.renda_familiar) setRendaFamiliar((fd.renda_familiar as RendaFamiliar) || { membros: [] });
+        if (fd?.patrimonio_imoveis) setPatrimonioImoveis((fd.patrimonio_imoveis as PatrimonioImoveis) || { bens: [] });
+        if (fd?.patrimonio_moveis) setPatrimonioMoveis((fd.patrimonio_moveis as PatrimonioMoveis) || { bens: [] });
+        if (fd?.outros_patrimonios) setOutrosPatrimonios((fd.outros_patrimonios as OutrosPatrimonios) || {});
+        if (fd?.declaracoes) setDeclaracoes((fd.declaracoes as Declaracoes) || {});
       })
       .catch(() => setError("Não foi possível carregar o processo."))
       .finally(() => setLoading(false));
@@ -94,6 +209,7 @@ export default function CandidatoProcessoInscricaoPage() {
 
   async function saveStep(stepIndex: number, formDataPatch: Record<string, unknown>) {
     setSaving(true);
+    setError(null);
     try {
       const res = await fetch(
         `${API_URL}/candidato/processos/${processId}/inscricao`,
@@ -115,7 +231,7 @@ export default function CandidatoProcessoInscricaoPage() {
           return next;
         });
       }
-      if (stepIndex < 3) setCurrentStep(stepIndex + 1);
+      if (stepIndex < 9) setCurrentStep(stepIndex + 1);
     } catch {
       setError("Erro ao salvar. Tente novamente.");
     } finally {
@@ -123,32 +239,17 @@ export default function CandidatoProcessoInscricaoPage() {
     }
   }
 
-  function handleSavePessoais() {
-    saveStep(0, { dados_pessoais: pessoais });
-  }
-
-  function handleSaveFamiliares() {
-    saveStep(1, { familiares });
-  }
-
-  function handleSaveRenda() {
-    saveStep(2, { renda });
-  }
-
   async function handleUpload() {
     if (!uploadFile || !uploadLabel.trim()) return;
     setUploading(true);
+    setError(null);
     try {
       const form = new FormData();
       form.append("file", uploadFile);
       form.append("document_label", uploadLabel.trim());
       const res = await fetch(
         `${API_URL}/candidato/processos/${processId}/inscricao/documentos`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: form,
-        }
+        { method: "POST", credentials: "include", body: form }
       );
       if (!res.ok) throw new Error("Erro ao enviar");
       const doc = await res.json();
@@ -179,6 +280,29 @@ export default function CandidatoProcessoInscricaoPage() {
     }
   }
 
+  const somaRenda = rendaFamiliar.membros.reduce(
+    (acc, m) => acc + (typeof m.renda_bruta_mensal === "number" ? m.renda_bruta_mensal : 0),
+    0
+  );
+  const numMembrosRenda = rendaFamiliar.membros.length || 1;
+  const rendaPerCapita = numMembrosRenda > 0 ? somaRenda / numMembrosRenda : 0;
+
+  const totalImoveis = patrimonioImoveis.bens.reduce(
+    (acc, b) => acc + (typeof b.valor_comercial === "number" ? b.valor_comercial : 0),
+    0
+  );
+  const totalMoveis = patrimonioMoveis.bens.reduce(
+    (acc, b) => acc + (typeof b.valor_fipe === "number" ? b.valor_fipe : 0),
+    0
+  );
+  const totalOutros =
+    (typeof outrosPatrimonios.dinheiro_especie === "number" ? outrosPatrimonios.dinheiro_especie : 0) +
+    (typeof outrosPatrimonios.poupanca === "number" ? outrosPatrimonios.poupanca : 0) +
+    (typeof outrosPatrimonios.aplicacoes === "number" ? outrosPatrimonios.aplicacoes : 0) +
+    (typeof outrosPatrimonios.previdencia_privada === "number" ? outrosPatrimonios.previdencia_privada : 0) +
+    (typeof outrosPatrimonios.consorcios === "number" ? outrosPatrimonios.consorcios : 0) +
+    (typeof outrosPatrimonios.patrimonio_rural === "number" ? outrosPatrimonios.patrimonio_rural : 0);
+
   if (loading) {
     return (
       <section className={styles.section}>
@@ -186,7 +310,6 @@ export default function CandidatoProcessoInscricaoPage() {
       </section>
     );
   }
-
   if (error && !data) {
     return (
       <section className={styles.section}>
@@ -197,7 +320,6 @@ export default function CandidatoProcessoInscricaoPage() {
       </section>
     );
   }
-
   if (!data) return null;
 
   const { process, steps } = data;
@@ -209,226 +331,758 @@ export default function CandidatoProcessoInscricaoPage() {
       </Link>
       <h1 className={styles.title}>{process.name}</h1>
       <p className={styles.subtitle}>
-        Preencha as etapas de cadastro do processo.
+        Preencha as etapas do formulário de inscrição.
       </p>
 
       <div className={styles.steps}>
-        {STEP_LABELS.map((label, i) => (
+        {steps.map((s, i) => (
           <button
             key={i}
             type="button"
-            className={`${styles.stepTab} ${currentStep === i ? styles.active : ""} ${steps[i]?.is_done ? styles.done : ""}`}
+            className={`${styles.stepTab} ${currentStep === i ? styles.active : ""} ${s.is_done ? styles.done : ""}`}
             onClick={() => setCurrentStep(i)}
           >
             <span className={styles.stepNum}>{i + 1}</span>
-            {label}
+            {s.name}
           </button>
         ))}
       </div>
 
       <div className={styles.panel}>
+        {/* SEÇÃO 1 – DADOS PESSOAIS */}
         {currentStep === 0 && (
           <div className={styles.form}>
-            <h2 className={styles.formTitle}>Dados pessoais</h2>
+            <h2 className={styles.formTitle}>Dados pessoais do candidato</h2>
             <p className={styles.formDesc}>
-              Complemente seus dados de contato e endereço.
+              Preencha seus dados pessoais.
             </p>
             <Input
-              label="Telefone"
-              value={pessoais.telefone ?? ""}
-              onChange={(e) => setPessoais((p) => ({ ...p, telefone: e.target.value }))}
-              placeholder="(00) 00000-0000"
+              label="Curso"
+              value={dadosPessoais.curso ?? ""}
+              onChange={(e) => setDadosPessoais((p) => ({ ...p, curso: e.target.value }))}
+              placeholder="Ex.: Administração"
             />
-            <Input
-              label="Endereço (rua)"
-              value={pessoais.endereco ?? ""}
-              onChange={(e) => setPessoais((p) => ({ ...p, endereco: e.target.value }))}
-              placeholder="Rua, avenida..."
-            />
-            <div className={styles.row}>
-              <Input
-                label="Número"
-                value={pessoais.numero ?? ""}
-                onChange={(e) => setPessoais((p) => ({ ...p, numero: e.target.value }))}
-                placeholder="Nº"
-              />
-              <Input
-                label="Complemento"
-                value={pessoais.complemento ?? ""}
-                onChange={(e) => setPessoais((p) => ({ ...p, complemento: e.target.value }))}
-                placeholder="Apto, bloco..."
-              />
+            <div className={styles.field}>
+              <span className={styles.label}>Turno</span>
+              <select
+                className={styles.select}
+                value={dadosPessoais.turno ?? ""}
+                onChange={(e) => setDadosPessoais((p) => ({ ...p, turno: e.target.value as DadosPessoais["turno"] }))}
+              >
+                <option value="">Selecione</option>
+                {TURNOS.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
             </div>
             <Input
-              label="Bairro"
-              value={pessoais.bairro ?? ""}
-              onChange={(e) => setPessoais((p) => ({ ...p, bairro: e.target.value }))}
-              placeholder="Bairro"
+              label="Nome civil/social"
+              value={dadosPessoais.nome_civil_social ?? ""}
+              onChange={(e) => setDadosPessoais((p) => ({ ...p, nome_civil_social: e.target.value }))}
+              placeholder="Nome completo"
             />
-            <div className={styles.row}>
-              <Input
-                label="Cidade"
-                value={pessoais.cidade ?? ""}
-                onChange={(e) => setPessoais((p) => ({ ...p, cidade: e.target.value }))}
-                placeholder="Cidade"
-              />
-              <Input
-                label="Estado"
-                value={pessoais.estado ?? ""}
-                onChange={(e) => setPessoais((p) => ({ ...p, estado: e.target.value }))}
-                placeholder="UF"
-                maxLength={2}
-              />
+            <Input
+              label="Idade"
+              variant="number"
+              min={1}
+              max={120}
+              value={dadosPessoais.idade === "" ? "" : dadosPessoais.idade}
+              onChange={(e) => setDadosPessoais((p) => ({ ...p, idade: parseNum(e.target.value) }))}
+              placeholder="Anos"
+            />
+            <div className={styles.field}>
+              <span className={styles.label}>Gênero</span>
+              <select
+                className={styles.select}
+                value={dadosPessoais.genero ?? ""}
+                onChange={(e) => setDadosPessoais((p) => ({ ...p, genero: e.target.value }))}
+              >
+                <option value="">Selecione</option>
+                {GENEROS.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
             </div>
             <Input
-              label="CEP"
-              value={pessoais.cep ?? ""}
-              onChange={(e) => setPessoais((p) => ({ ...p, cep: e.target.value }))}
-              placeholder="00000-000"
+              label="RG"
+              value={dadosPessoais.rg ?? ""}
+              onChange={(e) => setDadosPessoais((p) => ({ ...p, rg: e.target.value }))}
+              placeholder="Número do RG"
             />
+            <div className={styles.field}>
+              <span className={styles.label}>Estado civil</span>
+              <select
+                className={styles.select}
+                value={dadosPessoais.estado_civil ?? ""}
+                onChange={(e) => setDadosPessoais((p) => ({ ...p, estado_civil: e.target.value }))}
+              >
+                <option value="">Selecione</option>
+                {ESTADO_CIVIL.map((ec) => (
+                  <option key={ec} value={ec}>{ec}</option>
+                ))}
+              </select>
+            </div>
+            <Input
+              label="E-mail do candidato"
+              type="email"
+              value={dadosPessoais.email_candidato ?? ""}
+              onChange={(e) => setDadosPessoais((p) => ({ ...p, email_candidato: e.target.value }))}
+              placeholder="seu@email.com"
+            />
+            <div className={styles.field}>
+              <span className={styles.label}>O candidato é menor de 18 anos?</span>
+              <select
+                className={styles.select}
+                value={dadosPessoais.menor_18 === true ? "sim" : dadosPessoais.menor_18 === false ? "nao" : ""}
+                onChange={(e) => setDadosPessoais((p) => ({ ...p, menor_18: e.target.value === "sim" }))}
+              >
+                <option value="">Selecione</option>
+                <option value="nao">Não</option>
+                <option value="sim">Sim</option>
+              </select>
+            </div>
+            {dadosPessoais.menor_18 && (
+              <>
+                <Input
+                  label="Nome do responsável legal"
+                  value={dadosPessoais.nome_responsavel ?? ""}
+                  onChange={(e) => setDadosPessoais((p) => ({ ...p, nome_responsavel: e.target.value }))}
+                />
+                <Input
+                  label="Grau de parentesco"
+                  value={dadosPessoais.grau_parentesco_responsavel ?? ""}
+                  onChange={(e) => setDadosPessoais((p) => ({ ...p, grau_parentesco_responsavel: e.target.value }))}
+                  placeholder="Ex.: Pai, Mãe, Tutor"
+                />
+                <Input
+                  label="Contato do responsável"
+                  value={dadosPessoais.contato_responsavel ?? ""}
+                  onChange={(e) => setDadosPessoais((p) => ({ ...p, contato_responsavel: e.target.value }))}
+                  placeholder="Telefone ou e-mail"
+                />
+              </>
+            )}
             <div className={styles.actions}>
-              <Button
-                text="Salvar e continuar"
-                onClick={handleSavePessoais}
-                loading={saving}
-              />
+              <Button text="Salvar e continuar" onClick={() => saveStep(0, { dados_pessoais: dadosPessoais })} loading={saving} />
             </div>
           </div>
         )}
 
+        {/* SEÇÃO 2 – ENDEREÇO DA FAMÍLIA */}
         {currentStep === 1 && (
           <div className={styles.form}>
-            <h2 className={styles.formTitle}>Familiares</h2>
+            <h2 className={styles.formTitle}>Endereço da família</h2>
             <p className={styles.formDesc}>
-              Informe os membros do seu grupo familiar (quem mora com você).
+              Informe o endereço do grupo familiar.
             </p>
-            {familiares.map((f, i) => (
+            <Input
+              label="Endereço completo"
+              value={enderecoFamilia.endereco_completo ?? ""}
+              onChange={(e) => setEnderecoFamilia((p) => ({ ...p, endereco_completo: e.target.value }))}
+              placeholder="Rua, número..."
+            />
+            <Input
+              label="Complemento (apto, bloco, condomínio etc.)"
+              value={enderecoFamilia.complemento ?? ""}
+              onChange={(e) => setEnderecoFamilia((p) => ({ ...p, complemento: e.target.value }))}
+              placeholder="Apto, bloco..."
+            />
+            <Input
+              label="Bairro"
+              value={enderecoFamilia.bairro ?? ""}
+              onChange={(e) => setEnderecoFamilia((p) => ({ ...p, bairro: e.target.value }))}
+            />
+            <Input
+              label="CEP"
+              value={enderecoFamilia.cep ?? ""}
+              onChange={(e) => setEnderecoFamilia((p) => ({ ...p, cep: e.target.value }))}
+              placeholder="00000-000"
+            />
+            <Input
+              label="Ponto de referência / zona rural / região"
+              value={enderecoFamilia.ponto_referencia ?? ""}
+              onChange={(e) => setEnderecoFamilia((p) => ({ ...p, ponto_referencia: e.target.value }))}
+              placeholder="Referência para localização"
+            />
+            <div className={styles.actions}>
+              <Button text="Salvar e continuar" onClick={() => saveStep(1, { endereco_familia: enderecoFamilia })} loading={saving} />
+            </div>
+          </div>
+        )}
+
+        {/* SEÇÃO 3 – ENSINO MÉDIO */}
+        {currentStep === 2 && (
+          <div className={styles.form}>
+            <h2 className={styles.formTitle}>Dados curriculares – Ensino médio</h2>
+            <p className={styles.formDesc}>
+              Onde você cursou o ensino médio?
+            </p>
+            <div className={styles.field}>
+              <span className={styles.label}>Tipo de rede</span>
+              <select
+                className={styles.select}
+                value={ensinoMedio.tipo_rede ?? ""}
+                onChange={(e) => setEnsinoMedio((p) => ({ ...p, tipo_rede: e.target.value as EnsinoMedio["tipo_rede"] }))}
+              >
+                <option value="">Selecione</option>
+                {ENSINO_MEDIO_OPCOES.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.actions}>
+              <Button text="Salvar e continuar" onClick={() => saveStep(2, { ensino_medio: ensinoMedio })} loading={saving} />
+            </div>
+          </div>
+        )}
+
+        {/* SEÇÃO 4 – DADOS DA FAMÍLIA */}
+        {currentStep === 3 && (
+          <div className={styles.form}>
+            <h2 className={styles.formTitle}>Dados curriculares da família</h2>
+            <p className={styles.formDesc}>
+              Inclua os membros do grupo familiar (nome, parentesco, idade, escolaridade).
+            </p>
+            {(dadosFamilia.membros || []).map((m, i) => (
               <div key={i} className={styles.familiarCard}>
                 <Input
-                  label="Nome"
-                  value={f.nome}
+                  label="Nome completo"
+                  value={m.nome_completo}
                   onChange={(e) =>
-                    setFamiliares((prev) => {
-                      const n = [...prev];
-                      n[i] = { ...n[i], nome: e.target.value };
-                      return n;
-                    })
-                  }
-                  placeholder="Nome completo"
-                />
-                <Input
-                  label="CPF"
-                  value={f.cpf}
-                  onChange={(e) =>
-                    setFamiliares((prev) => {
-                      const n = [...prev];
-                      n[i] = { ...n[i], cpf: e.target.value };
-                      return n;
-                    })
-                  }
-                  placeholder="000.000.000-00"
-                />
-                <Input
-                  label="Parentesco"
-                  value={f.parentesco}
-                  onChange={(e) =>
-                    setFamiliares((prev) => {
-                      const n = [...prev];
-                      n[i] = { ...n[i], parentesco: e.target.value };
-                      return n;
-                    })
-                  }
-                  placeholder="Ex.: Cônjuge, Filho(a)"
-                />
-                <Input
-                  label="Data de nascimento"
-                  type="date"
-                  value={f.data_nascimento ?? ""}
-                  onChange={(e) =>
-                    setFamiliares((prev) => {
-                      const n = [...prev];
-                      n[i] = { ...n[i], data_nascimento: e.target.value };
+                    setDadosFamilia((prev) => {
+                      const n = { ...prev, membros: [...(prev.membros || [])] };
+                      n.membros[i] = { ...n.membros[i], nome_completo: e.target.value };
                       return n;
                     })
                   }
                 />
                 <Input
-                  label="Renda (R$)"
-                  value={f.renda ?? ""}
+                  label="Grau de parentesco"
+                  value={m.grau_parentesco}
                   onChange={(e) =>
-                    setFamiliares((prev) => {
-                      const n = [...prev];
-                      n[i] = { ...n[i], renda: e.target.value };
+                    setDadosFamilia((prev) => {
+                      const n = { ...prev, membros: [...(prev.membros || [])] };
+                      n.membros[i] = { ...n.membros[i], grau_parentesco: e.target.value };
                       return n;
                     })
                   }
-                  placeholder="0,00"
+                  placeholder="Ex.: Pai, Mãe, Filho(a)"
                 />
+                <Input
+                  label="Idade"
+                  variant="number"
+                  min={0}
+                  value={m.idade === "" ? "" : m.idade}
+                  onChange={(e) =>
+                    setDadosFamilia((prev) => {
+                      const n = { ...prev, membros: [...(prev.membros || [])] };
+                      n.membros[i] = { ...n.membros[i], idade: parseNum(e.target.value) };
+                      return n;
+                    })
+                  }
+                />
+                <div className={styles.field}>
+                  <span className={styles.label}>Escolaridade</span>
+                  <select
+                    className={styles.select}
+                    value={m.escolaridade}
+                    onChange={(e) =>
+                      setDadosFamilia((prev) => {
+                        const n = { ...prev, membros: [...(prev.membros || [])] };
+                        n.membros[i] = { ...n.membros[i], escolaridade: e.target.value };
+                        return n;
+                      })
+                    }
+                  >
+                    <option value="">Selecione</option>
+                    {ESCOLARIDADES.map((esc) => (
+                      <option key={esc} value={esc}>{esc}</option>
+                    ))}
+                  </select>
+                </div>
                 <Button
                   variant="danger"
                   size="sm"
                   text="Remover"
                   onClick={() =>
-                    setFamiliares((prev) => prev.filter((_, j) => j !== i))
+                    setDadosFamilia((prev) => ({
+                      ...prev,
+                      membros: prev.membros.filter((_, j) => j !== i),
+                    }))
                   }
                 />
               </div>
             ))}
             <Button
               variant="ghost"
-              text="+ Adicionar familiar"
+              text="+ Adicionar membro"
               onClick={() =>
-                setFamiliares((prev) => [
+                setDadosFamilia((prev) => ({
                   ...prev,
-                  { nome: "", cpf: "", parentesco: "" },
-                ])
+                  membros: [...(prev.membros || []), { nome_completo: "", grau_parentesco: "", idade: "", escolaridade: "" }],
+                }))
               }
             />
+            <div className={styles.field}>
+              <span className={styles.label}>Os dois genitores fazem parte do grupo familiar?</span>
+              <select
+                className={styles.select}
+                value={dadosFamilia.dois_genitores_no_grupo === true ? "sim" : dadosFamilia.dois_genitores_no_grupo === false ? "nao" : ""}
+                onChange={(e) => setDadosFamilia((p) => ({ ...p, dois_genitores_no_grupo: e.target.value === "sim" }))}
+              >
+                <option value="">Selecione</option>
+                <option value="sim">Sim</option>
+                <option value="nao">Não</option>
+              </select>
+            </div>
+            <div className={styles.field}>
+              <span className={styles.label}>Há irmãos que não residem com o grupo familiar?</span>
+              <select
+                className={styles.select}
+                value={dadosFamilia.irmaos_fora_residencia === true ? "sim" : dadosFamilia.irmaos_fora_residencia === false ? "nao" : ""}
+                onChange={(e) => setDadosFamilia((p) => ({ ...p, irmaos_fora_residencia: e.target.value === "sim" }))}
+              >
+                <option value="">Selecione</option>
+                <option value="sim">Sim</option>
+                <option value="nao">Não</option>
+              </select>
+            </div>
             <div className={styles.actions}>
-              <Button
-                text="Salvar e continuar"
-                onClick={handleSaveFamiliares}
-                loading={saving}
-              />
+              <Button text="Salvar e continuar" onClick={() => saveStep(3, { dados_familia: dadosFamilia })} loading={saving} />
             </div>
           </div>
         )}
 
-        {currentStep === 2 && (
+        {/* SEÇÃO 5 – RENDA FAMILIAR */}
+        {currentStep === 4 && (
           <div className={styles.form}>
-            <h2 className={styles.formTitle}>Renda</h2>
+            <h2 className={styles.formTitle}>Informações financeiras</h2>
             <p className={styles.formDesc}>
-              Informe a renda total do grupo familiar.
+              Tabela de renda familiar por membro.
+            </p>
+            {(rendaFamiliar.membros || []).map((m, i) => (
+              <div key={i} className={styles.familiarCard}>
+                <Input
+                  label="Primeiro nome"
+                  value={m.primeiro_nome}
+                  onChange={(e) =>
+                    setRendaFamiliar((prev) => {
+                      const n = { ...prev, membros: [...(prev.membros || [])] };
+                      n.membros[i] = { ...n.membros[i], primeiro_nome: e.target.value };
+                      return n;
+                    })
+                  }
+                />
+                <Input
+                  label="Fonte de renda"
+                  value={m.fonte_renda}
+                  onChange={(e) =>
+                    setRendaFamiliar((prev) => {
+                      const n = { ...prev, membros: [...(prev.membros || [])] };
+                      n.membros[i] = { ...n.membros[i], fonte_renda: e.target.value };
+                      return n;
+                    })
+                  }
+                  placeholder="Ex.: Salário, trabalho autônomo"
+                />
+                <Input
+                  label="Renda bruta mensal (R$)"
+                  variant="number"
+                  min={0}
+                  step={0.01}
+                  value={m.renda_bruta_mensal === "" ? "" : m.renda_bruta_mensal}
+                  onChange={(e) =>
+                    setRendaFamiliar((prev) => {
+                      const n = { ...prev, membros: [...(prev.membros || [])] };
+                      n.membros[i] = { ...n.membros[i], renda_bruta_mensal: parseNum(e.target.value) };
+                      return n;
+                    })
+                  }
+                />
+                <Button
+                  variant="danger"
+                  size="sm"
+                  text="Remover"
+                  onClick={() =>
+                    setRendaFamiliar((prev) => ({
+                      ...prev,
+                      membros: prev.membros.filter((_, j) => j !== i),
+                    }))
+                  }
+                />
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              text="+ Adicionar membro"
+              onClick={() =>
+                setRendaFamiliar((prev) => ({
+                  ...prev,
+                  membros: [...(prev.membros || []), { primeiro_nome: "", fonte_renda: "", renda_bruta_mensal: "" }],
+                }))
+              }
+            />
+            <div className={styles.calcBox}>
+              <p><strong>Soma da renda bruta familiar:</strong> R$ {somaRenda.toFixed(2)}</p>
+              <p><strong>Número de membros:</strong> {numMembrosRenda}</p>
+              <p><strong>Renda per capita:</strong> R$ {rendaPerCapita.toFixed(2)}</p>
+            </div>
+            <div className={styles.actions}>
+              <Button text="Salvar e continuar" onClick={() => saveStep(4, { renda_familiar: rendaFamiliar })} loading={saving} />
+            </div>
+          </div>
+        )}
+
+        {/* SEÇÃO 6 – BENS IMÓVEIS */}
+        {currentStep === 5 && (
+          <div className={styles.form}>
+            <h2 className={styles.formTitle}>Patrimônio – Bens imóveis</h2>
+            <p className={styles.formDesc}>
+              Imóvel de moradia e outros bens imóveis.
+            </p>
+            <div className={styles.field}>
+              <span className={styles.label}>O imóvel de moradia do grupo familiar é:</span>
+              <select
+                className={styles.select}
+                value={patrimonioImoveis.moradia ?? ""}
+                onChange={(e) => setPatrimonioImoveis((p) => ({ ...p, moradia: e.target.value as PatrimonioImoveis["moradia"] }))}
+              >
+                <option value="">Selecione</option>
+                <option value="proprio_quitado">Próprio quitado</option>
+                <option value="financiado">Financiado</option>
+                <option value="alugado">Alugado</option>
+                <option value="cedido">Cedido</option>
+              </select>
+            </div>
+            {patrimonioImoveis.moradia === "financiado" && (
+              <>
+                <Input
+                  label="Valor da parcela (R$)"
+                  variant="number"
+                  min={0}
+                  step={0.01}
+                  value={patrimonioImoveis.valor_parcela === "" ? "" : patrimonioImoveis.valor_parcela}
+                  onChange={(e) => setPatrimonioImoveis((p) => ({ ...p, valor_parcela: parseNum(e.target.value) }))}
+                />
+                <Input
+                  label="Número de parcelas restantes"
+                  variant="number"
+                  min={0}
+                  value={patrimonioImoveis.parcelas_restantes === "" ? "" : patrimonioImoveis.parcelas_restantes}
+                  onChange={(e) => setPatrimonioImoveis((p) => ({ ...p, parcelas_restantes: parseNum(e.target.value) }))}
+                />
+              </>
+            )}
+            {patrimonioImoveis.moradia === "alugado" && (
+              <Input
+                label="Valor mensal do aluguel (R$)"
+                variant="number"
+                min={0}
+                step={0.01}
+                value={patrimonioImoveis.valor_aluguel === "" ? "" : patrimonioImoveis.valor_aluguel}
+                onChange={(e) => setPatrimonioImoveis((p) => ({ ...p, valor_aluguel: parseNum(e.target.value) }))}
+              />
+            )}
+            <p className={styles.label}>Tabela de bens imóveis</p>
+            {(patrimonioImoveis.bens || []).map((b, i) => (
+              <div key={i} className={styles.familiarCard}>
+                <div className={styles.field}>
+                  <span className={styles.label}>Tipo</span>
+                  <select
+                    className={styles.select}
+                    value={b.tipo}
+                    onChange={(e) =>
+                      setPatrimonioImoveis((prev) => {
+                        const n = { ...prev, bens: [...(prev.bens || [])] };
+                        n.bens[i] = { ...n.bens[i], tipo: e.target.value as BemImovel["tipo"] };
+                        return n;
+                      })
+                    }
+                  >
+                    <option value="casa">Casa</option>
+                    <option value="apartamento">Apartamento</option>
+                    <option value="terreno">Terreno</option>
+                  </select>
+                </div>
+                <Input
+                  label="Valor comercial (R$)"
+                  variant="number"
+                  min={0}
+                  step={0.01}
+                  value={b.valor_comercial === "" ? "" : b.valor_comercial}
+                  onChange={(e) =>
+                    setPatrimonioImoveis((prev) => {
+                      const n = { ...prev, bens: [...(prev.bens || [])] };
+                      n.bens[i] = { ...n.bens[i], valor_comercial: parseNum(e.target.value) };
+                      return n;
+                    })
+                  }
+                />
+                <Button
+                  variant="danger"
+                  size="sm"
+                  text="Remover"
+                  onClick={() =>
+                    setPatrimonioImoveis((prev) => ({
+                      ...prev,
+                      bens: prev.bens.filter((_, j) => j !== i),
+                    }))
+                  }
+                />
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              text="+ Adicionar imóvel"
+              onClick={() =>
+                setPatrimonioImoveis((prev) => ({
+                  ...prev,
+                  bens: [...(prev.bens || []), { tipo: "casa", valor_comercial: "" }],
+                }))
+              }
+            />
+            <div className={styles.calcBox}>
+              <p><strong>Valor total dos bens imóveis:</strong> R$ {totalImoveis.toFixed(2)}</p>
+            </div>
+            <div className={styles.actions}>
+              <Button text="Salvar e continuar" onClick={() => saveStep(5, { patrimonio_imoveis: patrimonioImoveis })} loading={saving} />
+            </div>
+          </div>
+        )}
+
+        {/* SEÇÃO 7 – BENS MÓVEIS */}
+        {currentStep === 6 && (
+          <div className={styles.form}>
+            <h2 className={styles.formTitle}>Patrimônio – Bens móveis</h2>
+            <p className={styles.formDesc}>
+              Veículos e outros bens móveis (valor FIPE).
+            </p>
+            {(patrimonioMoveis.bens || []).map((b, i) => (
+              <div key={i} className={styles.familiarCard}>
+                <Input
+                  label="Tipo (automóvel, moto etc.)"
+                  value={b.tipo}
+                  onChange={(e) =>
+                    setPatrimonioMoveis((prev) => {
+                      const n = { ...prev, bens: [...(prev.bens || [])] };
+                      n.bens[i] = { ...n.bens[i], tipo: e.target.value };
+                      return n;
+                    })
+                  }
+                />
+                <Input
+                  label="Marca / modelo / ano"
+                  value={b.marca_modelo_ano}
+                  onChange={(e) =>
+                    setPatrimonioMoveis((prev) => {
+                      const n = { ...prev, bens: [...(prev.bens || [])] };
+                      n.bens[i] = { ...n.bens[i], marca_modelo_ano: e.target.value };
+                      return n;
+                    })
+                  }
+                />
+                <Input
+                  label="Valor conforme Tabela FIPE (R$)"
+                  variant="number"
+                  min={0}
+                  step={0.01}
+                  value={b.valor_fipe === "" ? "" : b.valor_fipe}
+                  onChange={(e) =>
+                    setPatrimonioMoveis((prev) => {
+                      const n = { ...prev, bens: [...(prev.bens || [])] };
+                      n.bens[i] = { ...n.bens[i], valor_fipe: parseNum(e.target.value) };
+                      return n;
+                    })
+                  }
+                />
+                <div className={styles.field}>
+                  <span className={styles.label}>Financiado?</span>
+                  <select
+                    className={styles.select}
+                    value={b.financiado === true ? "sim" : b.financiado === false ? "nao" : ""}
+                    onChange={(e) =>
+                      setPatrimonioMoveis((prev) => {
+                        const n = { ...prev, bens: [...(prev.bens || [])] };
+                        n.bens[i] = { ...n.bens[i], financiado: e.target.value === "sim" };
+                        return n;
+                      })
+                    }
+                  >
+                    <option value="">Selecione</option>
+                    <option value="nao">Não</option>
+                    <option value="sim">Sim</option>
+                  </select>
+                </div>
+                {b.financiado && (
+                  <>
+                    <Input
+                      label="Valor da parcela (R$)"
+                      variant="number"
+                      min={0}
+                      step={0.01}
+                      value={b.valor_parcela === "" ? "" : b.valor_parcela}
+                      onChange={(e) =>
+                        setPatrimonioMoveis((prev) => {
+                          const n = { ...prev, bens: [...(prev.bens || [])] };
+                          n.bens[i] = { ...n.bens[i], valor_parcela: parseNum(e.target.value) };
+                          return n;
+                        })
+                      }
+                    />
+                    <Input
+                      label="Parcelas restantes"
+                      variant="number"
+                      min={0}
+                      value={b.parcelas_restantes === "" ? "" : b.parcelas_restantes}
+                      onChange={(e) =>
+                        setPatrimonioMoveis((prev) => {
+                          const n = { ...prev, bens: [...(prev.bens || [])] };
+                          n.bens[i] = { ...n.bens[i], parcelas_restantes: parseNum(e.target.value) };
+                          return n;
+                        })
+                      }
+                    />
+                  </>
+                )}
+                <Button
+                  variant="danger"
+                  size="sm"
+                  text="Remover"
+                  onClick={() =>
+                    setPatrimonioMoveis((prev) => ({
+                      ...prev,
+                      bens: prev.bens.filter((_, j) => j !== i),
+                    }))
+                  }
+                />
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              text="+ Adicionar bem móvel"
+              onClick={() =>
+                setPatrimonioMoveis((prev) => ({
+                  ...prev,
+                  bens: [...(prev.bens || []), { tipo: "", marca_modelo_ano: "", valor_fipe: "" }],
+                }))
+              }
+            />
+            <div className={styles.calcBox}>
+              <p><strong>Valor total dos bens móveis:</strong> R$ {totalMoveis.toFixed(2)}</p>
+            </div>
+            <div className={styles.actions}>
+              <Button text="Salvar e continuar" onClick={() => saveStep(6, { patrimonio_moveis: patrimonioMoveis })} loading={saving} />
+            </div>
+          </div>
+        )}
+
+        {/* SEÇÃO 8 – OUTROS PATRIMÔNIOS */}
+        {currentStep === 7 && (
+          <div className={styles.form}>
+            <h2 className={styles.formTitle}>Outros patrimônios</h2>
+            <p className={styles.formDesc}>
+              Declaração de valores (R$).
             </p>
             <Input
-              label="Renda total mensal (R$)"
-              value={renda.renda_total ?? ""}
-              onChange={(e) => setRenda((r) => ({ ...r, renda_total: e.target.value }))}
-              placeholder="0,00"
+              label="Dinheiro em espécie (R$)"
+              variant="number"
+              min={0}
+              step={0.01}
+              value={outrosPatrimonios.dinheiro_especie === "" ? "" : outrosPatrimonios.dinheiro_especie}
+              onChange={(e) => setOutrosPatrimonios((p) => ({ ...p, dinheiro_especie: parseNum(e.target.value) }))}
             />
-            <label className={styles.label}>Composição da renda (opcional)</label>
-            <textarea
-              className={styles.textarea}
-              value={renda.composicao ?? ""}
-              onChange={(e) => setRenda((r) => ({ ...r, composicao: e.target.value }))}
-              placeholder="Ex.: Salário, trabalho autônomo, benefícios..."
-              rows={3}
+            <Input
+              label="Poupança (R$)"
+              variant="number"
+              min={0}
+              step={0.01}
+              value={outrosPatrimonios.poupanca === "" ? "" : outrosPatrimonios.poupanca}
+              onChange={(e) => setOutrosPatrimonios((p) => ({ ...p, poupanca: parseNum(e.target.value) }))}
             />
+            <Input
+              label="Aplicações financeiras (R$)"
+              variant="number"
+              min={0}
+              step={0.01}
+              value={outrosPatrimonios.aplicacoes === "" ? "" : outrosPatrimonios.aplicacoes}
+              onChange={(e) => setOutrosPatrimonios((p) => ({ ...p, aplicacoes: parseNum(e.target.value) }))}
+            />
+            <Input
+              label="Previdência privada (R$)"
+              variant="number"
+              min={0}
+              step={0.01}
+              value={outrosPatrimonios.previdencia_privada === "" ? "" : outrosPatrimonios.previdencia_privada}
+              onChange={(e) => setOutrosPatrimonios((p) => ({ ...p, previdencia_privada: parseNum(e.target.value) }))}
+            />
+            <Input
+              label="Consórcios (R$)"
+              variant="number"
+              min={0}
+              step={0.01}
+              value={outrosPatrimonios.consorcios === "" ? "" : outrosPatrimonios.consorcios}
+              onChange={(e) => setOutrosPatrimonios((p) => ({ ...p, consorcios: parseNum(e.target.value) }))}
+            />
+            <Input
+              label="Patrimônio rural (R$)"
+              variant="number"
+              min={0}
+              step={0.01}
+              value={outrosPatrimonios.patrimonio_rural === "" ? "" : outrosPatrimonios.patrimonio_rural}
+              onChange={(e) => setOutrosPatrimonios((p) => ({ ...p, patrimonio_rural: parseNum(e.target.value) }))}
+            />
+            <div className={styles.calcBox}>
+              <p><strong>Valor estimado total:</strong> R$ {totalOutros.toFixed(2)}</p>
+            </div>
             <div className={styles.actions}>
-              <Button
-                text="Salvar e continuar"
-                onClick={handleSaveRenda}
-                loading={saving}
-              />
+              <Button text="Salvar e continuar" onClick={() => saveStep(7, { outros_patrimonios: outrosPatrimonios })} loading={saving} />
             </div>
           </div>
         )}
 
-        {currentStep === 3 && (
+        {/* SEÇÃO 9 – DECLARAÇÕES */}
+        {currentStep === 8 && (
+          <div className={styles.form}>
+            <h2 className={styles.formTitle}>Declarações e responsabilidade</h2>
+            <p className={styles.formDesc}>
+              Leia e marque as declarações abaixo.
+            </p>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={!!declaracoes.veracidade}
+                onChange={(e) => setDeclaracoes((p) => ({ ...p, veracidade: e.target.checked }))}
+              />
+              <span>Declaro a veracidade das informações prestadas.</span>
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={!!declaracoes.ciencia_omissao_falsidade}
+                onChange={(e) => setDeclaracoes((p) => ({ ...p, ciencia_omissao_falsidade: e.target.checked }))}
+              />
+              <span>Tenho ciência de que a omissão ou falsidade pode implicar indeferimento da inscrição.</span>
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={!!declaracoes.aceite_termos}
+                onChange={(e) => setDeclaracoes((p) => ({ ...p, aceite_termos: e.target.checked }))}
+              />
+              <span>Aceito os termos e condições institucionais.</span>
+            </label>
+            <div className={styles.actions}>
+              <Button text="Salvar e continuar" onClick={() => saveStep(8, { declaracoes })} loading={saving} />
+            </div>
+          </div>
+        )}
+
+        {/* SEÇÃO 10 – DOCUMENTOS */}
+        {currentStep === 9 && (
           <div className={styles.form}>
             <h2 className={styles.formTitle}>Documentos</h2>
             <p className={styles.formDesc}>
-              Envie os documentos solicitados pelo processo (RG, CPF, comprovante de renda, etc.).
+              Envie os documentos solicitados (RG, CPF, comprovante de renda, etc.).
             </p>
             <div className={styles.uploadBox}>
               <Input
@@ -466,11 +1120,7 @@ export default function CandidatoProcessoInscricaoPage() {
               </ul>
             )}
             <div className={styles.actions}>
-              <Button
-                variant="ghost"
-                text="Voltar"
-                onClick={() => setCurrentStep(2)}
-              />
+              <Button variant="ghost" text="Voltar" onClick={() => setCurrentStep(8)} />
             </div>
           </div>
         )}

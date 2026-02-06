@@ -34,20 +34,40 @@ function rowToMessage(row: Record<string, unknown>): RealtimeMessage {
   };
 }
 
+function isFromOtherParty(
+  msg: RealtimeMessage,
+  isCandidate: boolean
+): boolean {
+  return msg.sender_type === (isCandidate ? "attendant" : "candidate");
+}
+
+export type UseRealtimeMessagesOptions = {
+  isCandidate: boolean;
+  /** Chamado apenas quando CHEGA mensagem do outro (nunca quando o usuário envia). */
+  onMessageFromOther?: (conversationId: string, msg: RealtimeMessage) => void;
+};
+
 /**
- * Inscreve em novas mensagens da conversa via Supabase Realtime.
- * Chama onNewMessage quando chega um INSERT em wallet_messages para essa conversa.
+ * Inscreve em novas mensagens das conversas via Supabase Realtime.
+ * - onMessageFromOther: chamado só quando CHEGA mensagem do outro (sender_type oposto).
+ *   Use para som e badge; não é chamado quando o usuário envia.
  */
 export function useRealtimeMessages(
-  conversationId: string | null,
-  onNewMessage: (msg: RealtimeMessage) => void
+  conversationIds: string[],
+  currentConversationId: string | null,
+  onNewMessage: (msg: RealtimeMessage) => void,
+  options: UseRealtimeMessagesOptions
 ) {
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const channelsRef = useRef<RealtimeChannel[]>([]);
   const onNewMessageRef = useRef(onNewMessage);
+  const onMessageFromOtherRef = useRef(options.onMessageFromOther);
   onNewMessageRef.current = onNewMessage;
+  onMessageFromOtherRef.current = options.onMessageFromOther;
+  const { isCandidate } = options;
 
   useEffect(() => {
-    if (!conversationId || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    const ids = conversationIds.filter(Boolean);
+    if (ids.length === 0 || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
       return undefined;
     }
 
@@ -69,41 +89,51 @@ export function useRealtimeMessages(
           },
         });
 
-        const channel = supabase
-          .channel(`wallet_messages:${conversationId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "wallet_messages",
-              filter: `conversation_id=eq.${conversationId}`,
-            },
-            (payload) => {
-              const row = (payload as { new?: Record<string, unknown> }).new;
-              if (row) {
-                onNewMessageRef.current(rowToMessage(row));
-              }
-            }
-          )
-          .subscribe();
+        ids.forEach((conversationId) => {
+          if (cancelled) return;
 
-        if (!cancelled) {
-          channelRef.current = channel;
-        } else {
-          channel.unsubscribe();
-        }
+          const channel = supabase
+            .channel(`wallet_messages:${conversationId}`)
+            .on(
+              "postgres_changes",
+              {
+                event: "INSERT",
+                schema: "public",
+                table: "wallet_messages",
+                filter: `conversation_id=eq.${conversationId}`,
+              },
+              (payload) => {
+                const row = (payload as { new?: Record<string, unknown> }).new;
+                if (!row) return;
+
+                const msg = rowToMessage(row);
+                const convId = String(row.conversation_id ?? conversationId);
+
+                if (isFromOtherParty(msg, isCandidate)) {
+                  onMessageFromOtherRef.current?.(convId, msg);
+                }
+                if (convId === currentConversationId) {
+                  onNewMessageRef.current(msg);
+                }
+              }
+            )
+            .subscribe();
+
+          channelsRef.current.push(channel);
+        });
       })
-      .catch(() => {
-        // Realtime opcional: falha silenciosa se token ou Supabase indisponível
-      });
+      .catch(() => {});
 
     return () => {
       cancelled = true;
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
-        channelRef.current = null;
-      }
+      channelsRef.current.forEach((ch) => {
+        ch.unsubscribe();
+      });
+      channelsRef.current = [];
     };
-  }, [conversationId]);
+  }, [
+    conversationIds.join(","),
+    currentConversationId,
+    isCandidate,
+  ]);
 }

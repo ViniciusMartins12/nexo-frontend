@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRealtimeMessages } from "@/lib/useRealtimeMessages";
+import { useUnreadMessages } from "@/lib/UnreadMessagesContext";
+import { playNotificationSound } from "@/lib/playNotificationSound";
 import styles from "./page.module.scss";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -51,12 +53,38 @@ export default function MensagensPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastSentMessageIdRef = useRef<string | null>(null);
+  const { addUnread, clearUnread } = useUnreadMessages();
 
-  useRealtimeMessages(selected?.id ?? null, (msg) => {
-    setMessages((prev) =>
-      prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
-    );
-  });
+  // Zerar contador ao abrir a tela de mensagens (atendente)
+  useEffect(() => {
+    clearUnread();
+  }, [clearUnread]);
+
+  const conversationIds = conversations
+    .map((c) => c.id)
+    .filter((id): id is string => id != null);
+  const currentId = selected?.id ?? null;
+
+  useRealtimeMessages(
+    conversationIds,
+    currentId,
+    (msg) => {
+      setMessages((prev) =>
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+      );
+    },
+    {
+      isCandidate: false,
+      onMessageFromOther: (convId, msg) => {
+        // Som só quando CHEGA mensagem do outro (nunca quando envia)
+        if (msg.id !== lastSentMessageIdRef.current) {
+          playNotificationSound();
+        }
+        if (convId !== currentId) addUnread();
+      },
+    }
+  );
 
   const fetchConversations = useCallback(() => {
     setLoadingList(true);
@@ -132,6 +160,7 @@ export default function MensagensPage() {
           return res.json();
         })
         .then((data: { conversation_id: string; message: Message }) => {
+          lastSentMessageIdRef.current = data.message.id;
           setMessages([data.message]);
           setInput("");
           setSelected((prev) =>
@@ -167,6 +196,7 @@ export default function MensagensPage() {
         return res.json();
       })
       .then((msg: Message) => {
+        lastSentMessageIdRef.current = msg.id;
         setMessages((prev) => [...prev, msg]);
         setInput("");
         fetchConversations();

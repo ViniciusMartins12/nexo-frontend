@@ -32,6 +32,7 @@ function roleLabel(role: string) {
     admin: "Administrador",
     coordinator: "Coordenador",
     viewer: "Visualizador",
+    atendente: "Atendente",
   };
   return map[role] ?? role;
 }

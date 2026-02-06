@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRealtimeMessages } from "@/lib/useRealtimeMessages";
+import { useUnreadMessages } from "@/lib/UnreadMessagesContext";
+import { playNotificationSound } from "@/lib/playNotificationSound";
 import styles from "./page.module.scss";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -51,12 +53,35 @@ export default function CandidatoMensagensPage() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const listFetched = useRef(false);
+  const lastSentMessageIdRef = useRef<string | null>(null);
+  const { addUnread, clearUnread } = useUnreadMessages();
 
-  useRealtimeMessages(selectedId, (msg) => {
-    setMessages((prev) =>
-      prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
-    );
-  });
+  // Zerar contador ao abrir a tela de mensagens (candidato)
+  useEffect(() => {
+    clearUnread();
+  }, [clearUnread]);
+
+  const conversationIds = conversations.map((c) => c.id);
+
+  useRealtimeMessages(
+    conversationIds,
+    selectedId,
+    (msg) => {
+      setMessages((prev) =>
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+      );
+    },
+    {
+      isCandidate: true,
+      onMessageFromOther: (convId, msg) => {
+        // Som só quando CHEGA mensagem do outro (nunca quando envia)
+        if (msg.id !== lastSentMessageIdRef.current) {
+          playNotificationSound();
+        }
+        if (convId !== selectedId) addUnread();
+      },
+    }
+  );
 
   const fetchConversations = useCallback(() => {
     setLoadingList(true);
@@ -122,6 +147,7 @@ export default function CandidatoMensagensPage() {
         return res.json();
       })
       .then((msg: Message) => {
+        lastSentMessageIdRef.current = msg.id;
         setMessages((prev) => [
           ...prev,
           {

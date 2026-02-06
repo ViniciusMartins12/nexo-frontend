@@ -1,0 +1,167 @@
+@use "../../../../../../styles" as *;
+
+.container {
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.sectionWrap {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.loading {
+  color: $color-text-placeholder;
+  padding: 24px 0;
+}
+
+.errorMsg {
+  color: $color-text-error;
+  margin-bottom: 16px;
+}
+
+.backLink {
+  display: inline-block;
+  font-size: 0.9375rem;
+  color: $color-primary;
+  text-decoration: none;
+  margin-bottom: 20px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0 0 8px;
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: $color-text-placeholder;
+  margin: 0 0 32px;
+}
+
+.section {
+  margin-bottom: 28px;
+  padding: 16px;
+  background: $background-secondary;
+  border-radius: 8px;
+  border: 1px solid $color-border-input;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid $color-border-input;
+}
+
+.sectionBody {
+  font-size: 0.9375rem;
+  color: $color-text-primary;
+}
+
+.field {
+  margin: 0 0 6px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.fieldLabel {
+  color: $color-text-placeholder;
+  text-transform: capitalize;
+}
+
+.fieldValue {
+  color: $color-text-primary;
+}
+
+.stepIntro {
+  margin: 0 0 12px;
+  color: $color-text-placeholder;
+  font-size: 0.875rem;
+}
+
+.stepList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.stepDone {
+  color: $color-text-primary;
+  padding: 4px 0;
+}
+
+.stepPending {
+  color: $color-text-placeholder;
+  padding: 4px 0;
+}
+
+.jsonBlock {
+  margin: 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.empty {
+  margin: 0;
+  color: $color-text-placeholder;
+  font-size: 0.9375rem;
+}
+
+.docList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.docItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid $color-border-input;
+  flex-wrap: wrap;
+}
+
+.docLabel {
+  font-weight: 500;
+  color: $color-text-primary;
+  min-width: 140px;
+}
+
+.docName {
+  flex: 1;
+  color: $color-text-placeholder;
+  font-size: 0.875rem;
+}
+
+.docBtn {
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: $color-primary;
+  background: transparent;
+  border: 1px solid $color-primary;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(7, 149, 255, 0.15);
+  }
+}

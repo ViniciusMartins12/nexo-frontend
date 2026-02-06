@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import styles from "./page.module.scss";
 import {
   ModalCarteira,
@@ -198,6 +199,14 @@ export default function CarteirasPage() {
                   )}
                 </div>
                 <div className={styles.cardActions}>
+                  <Link href={`/carteiras/${c.id}/alunos`}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      text="Acessar"
+                      disabled={deletingId !== null}
+                    />
+                  </Link>
                   <Button
                     variant="ghost"
                     size="sm"

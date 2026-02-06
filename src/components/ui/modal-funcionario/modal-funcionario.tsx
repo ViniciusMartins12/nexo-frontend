@@ -31,6 +31,7 @@ const ROLES = [
   { value: "admin", label: "Administrador" },
   { value: "coordinator", label: "Coordenador" },
   { value: "viewer", label: "Visualizador" },
+  { value: "atendente", label: "Atendente" },
 ];
 
 function formatCpf(value: string) {
