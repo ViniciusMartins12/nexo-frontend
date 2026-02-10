@@ -232,7 +232,8 @@
   display: block;
 }
 
-.fileInput {
+.fileInput,
+.fileInputHidden {
   display: none;
 }
 
@@ -282,4 +283,97 @@
 
 .docName {
   color: $color-text-placeholder;
+}
+
+/* Checklist de documentos por familiar */
+.docChecklistWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.docFamiliarBlock {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid $color-border-input;
+}
+
+.docFamiliarName {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: $color-secondary;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid $color-border-input;
+}
+
+.docSection {
+  margin-bottom: 16px;
+}
+
+.docSection:last-child {
+  margin-bottom: 0;
+}
+
+.docSectionTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0 0 8px;
+}
+
+.docChecklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.docChecklistItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.docChecklistItem:last-child {
+  border-bottom: none;
+}
+
+.docItemNum {
+  font-weight: 600;
+  color: $color-text-placeholder;
+  min-width: 2.5em;
+}
+
+.docItemLabel {
+  color: $color-text-primary;
+  line-height: 1.35;
+}
+
+.docItemActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.docEnviado {
+  font-size: 0.8125rem;
+  color: $color-text-placeholder;
+  font-style: italic;
+}
+
+.docOcultarBtn {
+  margin-left: auto;
+}
+
+.docHint {
+  font-size: 0.8125rem;
+  color: $color-text-placeholder;
+  margin: 0 0 8px;
 }

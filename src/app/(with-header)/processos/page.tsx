@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/modal/modal";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton, SkeletonList } from "@/components/ui/skeleton";
+import { useCompanyAuth } from "@/lib/CompanyAuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -27,6 +28,7 @@ function typeLabel(type: string) {
 }
 
 export default function ProcessosPage() {
+  const { isAtendente } = useCompanyAuth();
   const [processes, setProcesses] = useState<ProcessCreated[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,22 +135,26 @@ export default function ProcessosPage() {
             Uma plataforma única para gestão de documentos, automação com IA e
             atendimento ao usuário em tempo real.
           </p>
-          <div className={styles.cta}>
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              text="Criar Novo Processo"
-            />
-          </div>
+          {!isAtendente && (
+            <div className={styles.cta}>
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                text="Criar Novo Processo"
+              />
+            </div>
+          )}
         </section>
       ) : (
         <section className={styles.section}>
           <div className={styles.header}>
             <h1 className={styles.title}>Processos</h1>
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              text="Criar Novo Processo"
-              size="md"
-            />
+            {!isAtendente && (
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                text="Criar Novo Processo"
+                size="md"
+              />
+            )}
           </div>
           <ul className={styles.list}>
             {processes.map((p) => (
@@ -165,23 +171,25 @@ export default function ProcessosPage() {
                     <span className={styles.sep}>→</span>
                     <span>{formatDate(p.end_date)}</span>
                   </div>
-                  <div className={styles.cardActions}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      text="Editar"
-                      onClick={() => handleOpenEdit(p.id)}
-                      disabled={deletingId !== null}
-                    />
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      text="Excluir"
-                      onClick={() => handleDelete(p.id)}
-                      disabled={deletingId !== null}
-                      loading={deletingId === p.id}
-                    />
-                  </div>
+                  {!isAtendente && (
+                    <div className={styles.cardActions}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        text="Editar"
+                        onClick={() => handleOpenEdit(p.id)}
+                        disabled={deletingId !== null}
+                      />
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        text="Excluir"
+                        onClick={() => handleDelete(p.id)}
+                        disabled={deletingId !== null}
+                        loading={deletingId === p.id}
+                      />
+                    </div>
+                  )}
                 </div>
               </li>
             ))}
@@ -189,13 +197,15 @@ export default function ProcessosPage() {
         </section>
       )}
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onCreated={handleCreated}
-        initialProcess={editingProcess}
-        onUpdated={handleUpdated}
-      />
+      {!isAtendente && (
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onCreated={handleCreated}
+          initialProcess={editingProcess}
+          onUpdated={handleUpdated}
+        />
+      )}
     </main>
   );
 }

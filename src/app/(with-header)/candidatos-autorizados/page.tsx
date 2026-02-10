@@ -16,6 +16,9 @@ type CandidatoItem = {
   process_name: string;
   process_type: string;
   created_at: string;
+  curso: string | null;
+  turno: string | null;
+  media_enem: string | null;
 };
 
 type ProcessOption = { id: string; name: string; type: string };
@@ -30,6 +33,49 @@ function formatCpf(cpf: string) {
 
 function typeLabel(type: string) {
   return type === "manutencao" ? "Manutenção de bolsas" : "Novo Processo";
+}
+
+function turnoLabel(turno: string | null) {
+  if (!turno) return "—";
+  const map: Record<string, string> = {
+    manha: "Manhã",
+    tarde: "Tarde",
+    noite: "Noite",
+    integral: "Integral",
+  };
+  return map[turno] ?? turno;
+}
+
+const CSV_HEADERS = [
+  "Nome",
+  "CPF",
+  "Email",
+  "Processo",
+  "Tipo",
+  "Média ENEM",
+  "Curso",
+  "Turno",
+];
+
+function buildCsvLine(values: string[]): string {
+  return values
+    .map((v) => {
+      const s = String(v ?? "").replace(/"/g, '""');
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
+    })
+    .join(",");
+}
+
+function downloadCsv(filename: string, rows: string[][]) {
+  const header = buildCsvLine(CSV_HEADERS);
+  const body = rows.map((r) => buildCsvLine(r)).join("\r\n");
+  const blob = new Blob(["\uFEFF" + header + "\r\n" + body], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export default function CandidatosAutorizadosPage() {
@@ -118,6 +164,40 @@ export default function CandidatosAutorizadosPage() {
           />
         </div>
 
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.csvButton}
+            onClick={() => {
+              const rows = filteredList.map((item) => [
+                item.name,
+                item.cpf.replace(/\D/g, ""),
+                item.email ?? "",
+                item.process_name,
+                typeLabel(item.process_type),
+                item.media_enem ?? "",
+                item.curso ?? "",
+                item.turno ?? "",
+              ]);
+              downloadCsv("candidatos-autorizados.csv", rows);
+            }}
+            disabled={filteredList.length === 0}
+          >
+            Exportar CSV
+          </button>
+          <button
+            type="button"
+            className={styles.csvButtonSecondary}
+            onClick={() => {
+              downloadCsv("modelo-candidatos-autorizados.csv", [
+                ["Fulano da Silva", "12345678900", "fulano@email.com", "Processo 2025", "Novo Processo", "583,92", "Engenharia de Software", "manha"],
+              ]);
+            }}
+          >
+            Download modelo CSV
+          </button>
+        </div>
+
         {filteredList.length === 0 ? (
           <p className={styles.empty}>
             {list.length === 0
@@ -134,6 +214,9 @@ export default function CandidatosAutorizadosPage() {
                   <th>Email</th>
                   <th>Processo</th>
                   <th>Tipo</th>
+                  <th>Média ENEM</th>
+                  <th>Curso</th>
+                  <th>Turno</th>
                 </tr>
               </thead>
               <tbody>
@@ -144,6 +227,9 @@ export default function CandidatosAutorizadosPage() {
                     <td>{item.email ?? "—"}</td>
                     <td>{item.process_name}</td>
                     <td>{typeLabel(item.process_type)}</td>
+                    <td>{item.media_enem ?? "—"}</td>
+                    <td>{item.curso ?? "—"}</td>
+                    <td>{turnoLabel(item.turno)}</td>
                   </tr>
                 ))}
               </tbody>

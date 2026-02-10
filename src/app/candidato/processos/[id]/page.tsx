@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import { Input } from "@/components/ui/input/input";
 import { Button } from "@/components/ui/button/button";
+import { DOCUMENT_CHECKLIST } from "./documentChecklist";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+const DOC_LABEL_PREFIX = "DOC"; // prefixo para match: DOC|candidato|1.1|label
 
 // Tipos das seções
 type DadosPessoais = {
@@ -182,6 +185,14 @@ export default function CandidatoProcessoInscricaoPage() {
   const [uploadLabel, setUploadLabel] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [hiddenDocItems, setHiddenDocItems] = useState<Set<string>>(new Set());
+  const [selectedForUpload, setSelectedForUpload] = useState<{
+    familiarKey: string;
+    itemId: string;
+    itemLabel: string;
+    file: File | null;
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!processId) return;
@@ -202,6 +213,9 @@ export default function CandidatoProcessoInscricaoPage() {
         if (fd?.patrimonio_moveis) setPatrimonioMoveis((fd.patrimonio_moveis as PatrimonioMoveis) || { bens: [] });
         if (fd?.outros_patrimonios) setOutrosPatrimonios((fd.outros_patrimonios as OutrosPatrimonios) || {});
         if (fd?.declaracoes) setDeclaracoes((fd.declaracoes as Declaracoes) || {});
+        if (Array.isArray(fd?.documents_hidden)) {
+          setHiddenDocItems(new Set(fd.documents_hidden as string[]));
+        }
       })
       .catch(() => setError("Não foi possível carregar o processo."))
       .finally(() => setLoading(false));
@@ -273,11 +287,91 @@ export default function CandidatoProcessoInscricaoPage() {
       }
       setUploadLabel("");
       setUploadFile(null);
+      setSelectedForUpload(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
       setError("Erro ao enviar documento.");
     } finally {
       setUploading(false);
     }
+  }
+
+  function buildDocLabel(familiarKey: string, itemId: string, itemLabel: string) {
+    return `${familiarKey}|${itemId}|${itemLabel.slice(0, 120)}`;
+  }
+
+  function getDocForRow(familiarKey: string, itemId: string) {
+    if (!data) return null;
+    const prefix = `${familiarKey}|${itemId}|`;
+    return data.documents.find((d) => d.documentLabel.startsWith(prefix)) ?? null;
+  }
+
+  async function handleUploadForRow(
+    file: File,
+    familiarKey: string,
+    itemId: string,
+    itemLabel: string
+  ) {
+    const label = buildDocLabel(familiarKey, itemId, itemLabel);
+    setUploadFile(file);
+    setUploadLabel(label);
+    setUploading(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("document_label", label);
+      const res = await fetch(
+        `${API_URL}/candidato/processos/${processId}/inscricao/documentos`,
+        { method: "POST", credentials: "include", body: form }
+      );
+      if (!res.ok) throw new Error("Erro ao enviar");
+      const doc = await res.json();
+      if (data) {
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                documents: [
+                  ...prev.documents,
+                  {
+                    id: doc.id,
+                    documentLabel: doc.document_label,
+                    fileName: doc.file_name,
+                    uploadedAt: doc.uploaded_at,
+                  },
+                ],
+              }
+            : prev
+        );
+      }
+      setSelectedForUpload(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch {
+      setError("Erro ao enviar documento.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function toggleDocItemHidden(familiarKey: string, itemId: string) {
+    const key = `${familiarKey}-${itemId}`;
+    setHiddenDocItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      const arr = Array.from(next);
+      fetch(
+        `${API_URL}/candidato/processos/${processId}/inscricao`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ step_index: 9, form_data: { documents_hidden: arr } }),
+        }
+      ).catch(() => {});
+      return next;
+    });
   }
 
   const somaRenda = rendaFamiliar.membros.reduce(
@@ -1077,48 +1171,152 @@ export default function CandidatoProcessoInscricaoPage() {
           </div>
         )}
 
-        {/* SEÇÃO 10 – DOCUMENTOS */}
+        {/* SEÇÃO 10 – DOCUMENTOS (checklist por familiar) */}
         {currentStep === 9 && (
           <div className={styles.form}>
             <h2 className={styles.formTitle}>Documentos</h2>
             <p className={styles.formDesc}>
-              Envie os documentos solicitados (RG, CPF, comprovante de renda, etc.).
+              Envie os documentos solicitados para cada membro do grupo familiar. Use &quot;Ocultar&quot; para remover um item da lista quando não se aplicar.
             </p>
-            <div className={styles.uploadBox}>
-              <Input
-                label="Tipo do documento"
-                value={uploadLabel}
-                onChange={(e) => setUploadLabel(e.target.value)}
-                placeholder="Ex.: RG, CPF, Comprovante de residência"
-              />
-              <label className={styles.fileLabel}>
-                <input
-                  type="file"
-                  className={styles.fileInput}
-                  onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-                />
-                <span className={styles.fileButton}>
-                  {uploadFile ? uploadFile.name : "Escolher arquivo"}
-                </span>
-              </label>
-              <Button
-                text="Enviar documento"
-                onClick={handleUpload}
-                loading={uploading}
-                disabled={!uploadFile || !uploadLabel.trim()}
-              />
-            </div>
-            {data.documents.length > 0 && (
+
+            {(() => {
+              const candidatoNome = (dadosPessoais?.nome_completo as string)?.trim() || "Candidato";
+              const membros = dadosFamilia?.membros ?? [];
+              const familiares: { key: string; label: string }[] = [
+                { key: "candidato", label: candidatoNome },
+                ...membros.map((m, i) => ({
+                  key: String(i + 1),
+                  label: `Membro ${i + 1} - ${(m as MembroFamiliar).nome_completo || `Membro ${i + 1}`}`,
+                })),
+              ];
+
+              return (
+                <div className={styles.docChecklistWrap}>
+                  {familiares.map(({ key: familiarKey, label: familiarLabel }) => (
+                    <div key={familiarKey} className={styles.docFamiliarBlock}>
+                      <h3 className={styles.docFamiliarName}>{familiarLabel}</h3>
+                      {DOCUMENT_CHECKLIST.map((section) => (
+                        <div key={section.title} className={styles.docSection}>
+                          <h4 className={styles.docSectionTitle}>{section.title}</h4>
+                          <ul className={styles.docChecklist}>
+                            {section.items
+                              .filter(
+                                (item) =>
+                                  !item.onlyCandidato || familiarKey === "candidato"
+                              )
+                              .filter(
+                                (item) =>
+                                  !hiddenDocItems.has(`${familiarKey}-${item.id}`)
+                              )
+                              .map((item) => {
+                                const doc = getDocForRow(familiarKey, item.id);
+                                const isSelected =
+                                  selectedForUpload?.familiarKey === familiarKey &&
+                                  selectedForUpload?.itemId === item.id;
+                                return (
+                                  <li
+                                    key={`${familiarKey}-${item.id}`}
+                                    className={styles.docChecklistItem}
+                                  >
+                                    <span className={styles.docItemNum}>{item.id}</span>
+                                    <span className={styles.docItemLabel}>{item.label}</span>
+                                    <div className={styles.docItemActions}>
+                                      {doc ? (
+                                        <span className={styles.docEnviado}>
+                                          Enviado: {doc.fileName}
+                                        </span>
+                                      ) : (
+                                        <>
+                                          <input
+                                            type="file"
+                                            className={styles.fileInputHidden}
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              if (file)
+                                                setSelectedForUpload({
+                                                  familiarKey,
+                                                  itemId: item.id,
+                                                  itemLabel: item.label,
+                                                  file,
+                                                });
+                                            }}
+                                            id={`file-${familiarKey}-${item.id}`}
+                                          />
+                                          <label
+                                            htmlFor={`file-${familiarKey}-${item.id}`}
+                                            className={styles.fileLabel}
+                                          >
+                                            <span className={styles.fileButton}>
+                                              {isSelected && selectedForUpload?.file
+                                                ? selectedForUpload.file.name
+                                                : "Escolher arquivo"}
+                                            </span>
+                                          </label>
+                                          <Button
+                                            size="sm"
+                                            text="Enviar"
+                                            loading={
+                                              uploading &&
+                                              selectedForUpload?.familiarKey === familiarKey &&
+                                              selectedForUpload?.itemId === item.id
+                                            }
+                                            disabled={!isSelected || !selectedForUpload?.file}
+                                            onClick={() => {
+                                              if (
+                                                selectedForUpload?.familiarKey === familiarKey &&
+                                                selectedForUpload?.itemId === item.id &&
+                                                selectedForUpload?.file
+                                              ) {
+                                                handleUploadForRow(
+                                                  selectedForUpload.file,
+                                                  familiarKey,
+                                                  item.id,
+                                                  item.label
+                                                );
+                                              }
+                                            }}
+                                          />
+                                        </>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        text="Ocultar"
+                                        onClick={() =>
+                                          toggleDocItemHidden(familiarKey, item.id)
+                                        }
+                                        className={styles.docOcultarBtn}
+                                      />
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <p className={styles.docHint}>
+              Documentos enviados anteriormente (outro formato) continuam abaixo.
+            </p>
+            {data.documents.filter((d) => !d.documentLabel.includes("|")).length > 0 && (
               <ul className={styles.docList}>
-                <li className={styles.docListTitle}>Documentos enviados:</li>
-                {data.documents.map((d) => (
-                  <li key={d.id} className={styles.docItem}>
-                    <span className={styles.docLabel}>{d.documentLabel}</span>
-                    <span className={styles.docName}>{d.fileName}</span>
-                  </li>
-                ))}
+                {data.documents
+                  .filter((d) => !d.documentLabel.includes("|"))
+                  .map((d) => (
+                    <li key={d.id} className={styles.docItem}>
+                      <span className={styles.docLabel}>{d.documentLabel}</span>
+                      <span className={styles.docName}>{d.fileName}</span>
+                    </li>
+                  ))}
               </ul>
             )}
+
             <div className={styles.actions}>
               <Button variant="ghost" text="Voltar" onClick={() => setCurrentStep(8)} />
             </div>

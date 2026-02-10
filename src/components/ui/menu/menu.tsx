@@ -13,9 +13,11 @@ type MenuProps = {
   onClose: () => void;
   /** "candidate" = só Mensagens, Processos e tema; "company" = menu completo */
   variant?: "company" | "candidate";
+  /** Se true (atendente), esconde Dashboard e Funcionários */
+  isAtendente?: boolean;
 };
 
-export function Menu({ isOpen, onClose, variant = "company" }: MenuProps) {
+export function Menu({ isOpen, onClose, variant = "company", isAtendente = false }: MenuProps) {
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
 
@@ -24,6 +26,8 @@ export function Menu({ isOpen, onClose, variant = "company" }: MenuProps) {
   const linkProps = { onClick: onClose };
 
   const isCandidate = variant === "candidate";
+  const showDashboard = !isCandidate && !isAtendente;
+  const showFuncionarios = !isCandidate && !isAtendente;
 
   const handleLogout = () => {
     onClose();
@@ -39,17 +43,11 @@ export function Menu({ isOpen, onClose, variant = "company" }: MenuProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <nav>
-          {!isCandidate && (
-            <>
-              <Link href="/" {...linkProps}>
-                <Image src="/icons/home.svg" alt="" width={15} height={15} />
-                <span>Home</span>
-              </Link>
-              <Link href="/dashboard" {...linkProps}>
-                <Image src="/icons/dash.svg" alt="" width={15} height={15} />
-                <span>Dashboard</span>
-              </Link>
-            </>
+          {showDashboard && (
+            <Link href="/dashboard" {...linkProps}>
+              <Image src="/icons/dash.svg" alt="" width={15} height={15} />
+              <span>Dashboard</span>
+            </Link>
           )}
           <Link href={isCandidate ? "/candidato/processos" : "/processos"} {...linkProps}>
             <Image src="/icons/process.svg" alt="" width={15} height={15} />
@@ -68,16 +66,28 @@ export function Menu({ isOpen, onClose, variant = "company" }: MenuProps) {
             <span>Mensagens</span>
           </Link>
           {!isCandidate && (
-            <>
-              <Link href="/candidatos-autorizados" {...linkProps}>
-                <Image src="/icons/autorization.svg" alt="" width={15} height={15} />
-                <span>Candidatos autorizados</span>
-              </Link>
-              <Link href="/funcionarios" {...linkProps}>
-                <Image src="/icons/user-add.svg" alt="" width={15} height={15} />
-                <span>Funcionários</span>
-              </Link>
-            </>
+            <Link href="/candidatos-autorizados" {...linkProps}>
+              <Image src="/icons/autorization.svg" alt="" width={15} height={15} />
+              <span>Candidatos autorizados</span>
+            </Link>
+          )}
+          {showFuncionarios && (
+            <Link href="/funcionarios" {...linkProps}>
+              <Image src="/icons/user-add.svg" alt="" width={15} height={15} />
+              <span>Funcionários</span>
+            </Link>
+          )}
+          {!isCandidate && (
+            <Link href="/configuracoes" {...linkProps}>
+              <Image src="/svg/settings.svg" alt="" width={15} height={15} />
+              <span>Configurações</span>
+            </Link>
+          )}
+          {isCandidate && (
+            <Link href="/candidato/configuracoes" {...linkProps}>
+              <Image src="/svg/settings.svg" alt="" width={15} height={15} />
+              <span>Configurações</span>
+            </Link>
           )}
           <div className={styles.line}></div>
           <button

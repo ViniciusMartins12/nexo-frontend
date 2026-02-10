@@ -34,7 +34,49 @@
 }
 
 .filterWrap {
+  margin-bottom: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.csvButton,
+.csvButtonSecondary {
+  padding: 8px 16px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.csvButton {
+  background: $color-primary;
+  color: #fff;
+  border: 1px solid $color-primary;
+}
+
+.csvButton:hover:not(:disabled) {
+  background: #003d8f; /* primary mais escuro (hover) */
+}
+
+.csvButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.csvButtonSecondary {
+  background: transparent;
+  color: $color-secondary;
+  border: 1px solid $color-border-input;
+}
+
+.csvButtonSecondary:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .tableWrap {

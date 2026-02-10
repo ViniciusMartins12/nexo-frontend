@@ -162,6 +162,48 @@
     margin: 0;
   }
 
+  .linkButton {
+    background: none;
+    border: none;
+    padding: 0;
+    color: $color-secondary;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+  }
+
+  .linkButton:hover {
+    color: $color-primary;
+  }
+
+  .vagasList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .vagaRow {
+    display: grid;
+    grid-template-columns: 1fr 140px 100px auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .removeVaga {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    color: $color-text-placeholder;
+    background: transparent;
+    border: 1px solid $color-border-input;
+    border-radius: $radius-md;
+    cursor: pointer;
+  }
+
+  .removeVaga:hover {
+    color: $color-text-primary;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
   .fileWrap {
     display: flex;
     align-items: center;

@@ -1,0 +1,71 @@
+@use "../../../styles/" as *;
+
+.container {
+  min-height: 100vh;
+  background: radial-gradient(
+      circle at bottom,
+      rgba(0, 74, 173, 0.2),
+      transparent 60%
+    ),
+    var(--color-background);
+}
+
+.section {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: $color-text-primary;
+}
+
+.card {
+  background: $background-secondary;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: $color-text-primary;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.toggleLabel {
+  font-size: 15px;
+  color: $color-text-primary;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: #0795ff;
+  cursor: pointer;
+}
+
+.planValue {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0795ff;
+  margin-bottom: 8px;
+}
+
+.muted {
+  font-size: 14px;
+  color: #b0b0b0;
+  margin: 0;
+}

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/modal-carteira";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton, SkeletonList } from "@/components/ui/skeleton";
+import { useCompanyAuth } from "@/lib/CompanyAuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -50,6 +51,7 @@ function toItem(c: CarteiraCreated): CarteiraItem {
 }
 
 export default function CarteirasPage() {
+  const { isAtendente } = useCompanyAuth();
   const [list, setList] = useState<CarteiraItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,22 +158,26 @@ export default function CarteirasPage() {
             Vincule funcionários e processos ativos em carteiras para organizar
             melhor o trabalho.
           </p>
-          <div className={styles.cta}>
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              text="Nova carteira"
-            />
-          </div>
+          {!isAtendente && (
+            <div className={styles.cta}>
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                text="Nova carteira"
+              />
+            </div>
+          )}
         </section>
       ) : (
         <section className={styles.section}>
           <div className={styles.header}>
             <h1 className={styles.title}>Carteiras</h1>
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              text="Nova carteira"
-              size="md"
-            />
+            {!isAtendente && (
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                text="Nova carteira"
+                size="md"
+              />
+            )}
           </div>
           <ul className={styles.list}>
             {list.map((c) => (
@@ -207,21 +213,25 @@ export default function CarteirasPage() {
                       disabled={deletingId !== null}
                     />
                   </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    text="Editar"
-                    onClick={() => handleOpenEdit(c.id)}
-                    disabled={deletingId !== null}
-                  />
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    text="Excluir"
-                    onClick={() => handleDelete(c.id)}
-                    disabled={deletingId !== null}
-                    loading={deletingId === c.id}
-                  />
+                  {!isAtendente && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        text="Editar"
+                        onClick={() => handleOpenEdit(c.id)}
+                        disabled={deletingId !== null}
+                      />
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        text="Excluir"
+                        onClick={() => handleDelete(c.id)}
+                        disabled={deletingId !== null}
+                        loading={deletingId === c.id}
+                      />
+                    </>
+                  )}
                 </div>
               </li>
             ))}
@@ -229,13 +239,15 @@ export default function CarteirasPage() {
         </section>
       )}
 
-      <ModalCarteira
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onCreated={handleCreated}
-        initialCarteira={editingCarteira}
-        onUpdated={handleUpdated}
-      />
+      {!isAtendente && (
+        <ModalCarteira
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onCreated={handleCreated}
+          initialCarteira={editingCarteira}
+          onUpdated={handleUpdated}
+        />
+      )}
     </main>
   );
 }

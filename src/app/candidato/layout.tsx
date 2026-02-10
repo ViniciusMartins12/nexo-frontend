@@ -3,9 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/ui/header/header";
+import { useUnreadMessages } from "@/lib/UnreadMessagesContext";
+import { useRealtimeMessages } from "@/lib/useRealtimeMessages";
+import { playNotificationSound } from "@/lib/playNotificationSound";
 import styles from "./layout.module.scss";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+type ConversationItem = { id: string; [key: string]: unknown };
 
 export default function CandidatoLayout({
   children,
@@ -14,6 +19,23 @@ export default function CandidatoLayout({
 }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const { addUnread } = useUnreadMessages();
+
+  const conversationIds = conversations.map((c) => c.id);
+
+  useRealtimeMessages(
+    conversationIds,
+    null,
+    () => {},
+    {
+      isCandidate: true,
+      onMessageFromOther: () => {
+        playNotificationSound();
+        addUnread();
+      },
+    }
+  );
 
   useEffect(() => {
     fetch(`${API_URL}/auth/sync`, {
@@ -34,6 +56,16 @@ export default function CandidatoLayout({
         }
       });
   }, [router]);
+
+  useEffect(() => {
+    if (!checked) return;
+    fetch(`${API_URL}/candidato/mensagens/conversas`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: ConversationItem[]) =>
+        setConversations(Array.isArray(data) ? data : [])
+      )
+      .catch(() => setConversations([]));
+  }, [checked]);
 
   if (!checked) {
     return (

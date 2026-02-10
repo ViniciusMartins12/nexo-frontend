@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Menu } from "../menu/menu";
 import { useUnreadMessages } from "@/lib/UnreadMessagesContext";
+import { useCompanyAuth } from "@/lib/CompanyAuthContext";
 import styles from "./header.module.scss";
 
 type HeaderProps = {
@@ -16,8 +17,14 @@ export function Header({ variant = "company" }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { unreadCount } = useUnreadMessages();
+  const { isAtendente } = useCompanyAuth();
 
-  const logoHref = variant === "candidate" ? "/candidato" : "/dashboard";
+  const logoHref =
+    variant === "candidate"
+      ? "/candidato"
+      : isAtendente
+        ? "/processos"
+        : "/dashboard";
   const mensagensHref = variant === "candidate" ? "/candidato/mensagens" : "/mensagens";
 
   return (
@@ -58,12 +65,6 @@ export function Header({ variant = "company" }: HeaderProps) {
             )}
           </Link>
           <Image
-            src="/icons/bell.svg"
-            alt="Notificações"
-            width={20}
-            height={20}
-          />
-          <Image
             src="/icons/user.svg"
             alt="Perfil"
             width={20}
@@ -77,6 +78,7 @@ export function Header({ variant = "company" }: HeaderProps) {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         variant={variant}
+        isAtendente={variant === "company" ? isAtendente : false}
       />
     </>
   );

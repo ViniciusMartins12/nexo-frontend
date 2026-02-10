@@ -10,7 +10,7 @@ import { Stepper, Step, useStepper } from "./index";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-const STEPS = ["Dados do processo", "Participantes (CSV)"];
+const STEPS = ["Dados do processo", "Vagas", "Participantes (CSV)"];
 
 export type ProcessCreated = {
   id: string;
@@ -21,9 +21,12 @@ export type ProcessCreated = {
   created_at: string;
 };
 
+export type VacancyRow = { curso: string; turno: string; quantidade: number };
+
 export type ProcessForEdit = ProcessCreated & {
   guidelines?: string | null;
   edital_url?: string | null;
+  vacancies?: VacancyRow[] | null;
 };
 
 type ParticipantRow = { cpf: string; email: string; name: string };
@@ -116,6 +119,7 @@ export function Modal({
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
 
   const isEdit = Boolean(initialProcess?.id);
   const currentProcessId = processId ?? initialProcess?.id ?? null;
@@ -129,6 +133,11 @@ export function Modal({
       setGuidelines(initialProcess.guidelines ?? "");
       setEditalUrl(initialProcess.edital_url ?? "");
       setProcessId(initialProcess.id);
+      setVacancies(
+        Array.isArray(initialProcess.vacancies) && initialProcess.vacancies.length > 0
+          ? initialProcess.vacancies
+          : []
+      );
     } else if (isOpen && !initialProcess) {
       setName("");
       setStartDate("");
@@ -137,6 +146,7 @@ export function Modal({
       setGuidelines("");
       setEditalUrl("");
       setProcessId(null);
+      setVacancies([]);
     }
     if (isOpen) {
       setErrorMsg(null);
@@ -250,6 +260,8 @@ export function Modal({
             setUploadSuccess={setUploadSuccess}
             uploadError={uploadError}
             setUploadError={setUploadError}
+            vacancies={vacancies}
+            setVacancies={setVacancies}
             onClose={onClose}
           />
         </Stepper>
@@ -287,6 +299,8 @@ function ModalContent({
   setUploadSuccess,
   uploadError,
   setUploadError,
+  vacancies,
+  setVacancies,
   onClose,
 }: {
   name: string;
@@ -317,9 +331,36 @@ function ModalContent({
   setUploadSuccess: (v: string | null) => void;
   uploadError: string | null;
   setUploadError: (v: string | null) => void;
+  vacancies: VacancyRow[];
+  setVacancies: (v: VacancyRow[] | ((prev: VacancyRow[]) => VacancyRow[])) => void;
   onClose: () => void;
 }) {
   const { currentStep, nextStep, prevStep } = useStepper();
+  const [vagasLoading, setVagasLoading] = useState(false);
+  const TURNOS = [
+    { value: "manha", label: "Manhã" },
+    { value: "tarde", label: "Tarde" },
+    { value: "noite", label: "Noite" },
+    { value: "integral", label: "Integral" },
+  ];
+
+  function downloadModeloCsv() {
+    const headers = ["Nome", "CPF", "Email", "Processo", "Tipo", "Média ENEM", "Curso", "Turno"];
+    const escape = (v: string) => {
+      const s = String(v).replace(/"/g, '""');
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
+    };
+    const row = ["Fulano da Silva", "12345678900", "fulano@email.com", "Processo 2025", "Novo Processo", "583,92", "Engenharia de Software", "manha"];
+    const line = (arr: string[]) => arr.map(escape).join(",");
+    const csv = "\uFEFF" + line(headers) + "\r\n" + line(row);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "modelo-candidatos-autorizados.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const onFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -456,9 +497,118 @@ function ModalContent({
 
       <Step step={1}>
         <div className={styles.stepContent}>
+          <h2 className={styles.stepTitle}>Vagas por curso e turno</h2>
+          <p className={styles.stepDesc}>
+            Defina a quantidade de vagas para cada combinação de curso e turno. Você pode pular ou adicionar depois.
+          </p>
+          <div className={styles.vagasList}>
+            {vacancies.map((row, idx) => (
+              <div key={idx} className={styles.vagaRow}>
+                <Input
+                  label="Curso"
+                  variant="text"
+                  value={row.curso}
+                  onChange={(e) =>
+                    setVacancies((prev) => {
+                      const next = [...prev];
+                      next[idx] = { ...next[idx], curso: e.target.value };
+                      return next;
+                    })
+                  }
+                  placeholder="Ex.: Engenharia de Software"
+                />
+                <Selected
+                  label="Turno"
+                  value={row.turno}
+                  onChange={(e) =>
+                    setVacancies((prev) => {
+                      const next = [...prev];
+                      next[idx] = { ...next[idx], turno: e.target.value };
+                      return next;
+                    })
+                  }
+                  options={TURNOS}
+                />
+                <Input
+                  label="Quantidade"
+                  variant="number"
+                  min={0}
+                  value={row.quantidade > 0 ? String(row.quantidade) : ""}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10);
+                    setVacancies((prev) => {
+                      const next = [...prev];
+                      next[idx] = { ...next[idx], quantidade: Number.isFinite(n) && n >= 0 ? n : 0 };
+                      return next;
+                    });
+                  }}
+                  placeholder="0"
+                />
+                <button
+                  type="button"
+                  className={styles.removeVaga}
+                  onClick={() => setVacancies((prev) => prev.filter((_, i) => i !== idx))}
+                  aria-label="Remover linha"
+                >
+                  Remover
+                </button>
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              text="+ Adicionar vaga"
+              onClick={() =>
+                setVacancies((prev) => [...prev, { curso: "", turno: "manha", quantidade: 0 }])
+              }
+            />
+          </div>
+          <div className={styles.buttons}>
+            <Button variant="ghost" text="Voltar" onClick={prevStep} />
+            <Button
+              text="Próximo"
+              loading={vagasLoading}
+              onClick={async () => {
+                if (!currentProcessId) {
+                  setUploadError("Processo não identificado. Volte ao passo anterior e clique em \"Criar e continuar\" novamente.");
+                  return;
+                }
+                setVagasLoading(true);
+                setUploadError(null);
+                try {
+                  const payload = vacancies
+                    .filter((v) => v.curso.trim() !== "" && v.quantidade > 0)
+                    .map((v) => ({ curso: v.curso.trim(), turno: v.turno, quantidade: v.quantidade }));
+                  const res = await fetch(`${API_URL}/processes/${currentProcessId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ vacancies: payload }),
+                  });
+                  if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    const msg = errData?.message ?? (Array.isArray(errData.message) ? errData.message.join(" ") : "Erro ao salvar vagas");
+                    throw new Error(msg);
+                  }
+                  nextStep();
+                } catch (e) {
+                  setUploadError(e instanceof Error ? e.message : "Erro ao salvar vagas. Tente novamente.");
+                } finally {
+                  setVagasLoading(false);
+                }
+              }}
+            />
+          </div>
+          {uploadError && currentStep === 1 && (
+            <p className={styles.error}>{uploadError}</p>
+          )}
+        </div>
+      </Step>
+
+      <Step step={2}>
+        <div className={styles.stepContent}>
           <h2 className={styles.stepTitle}>Lista de participantes</h2>
           <p className={styles.stepDesc}>
-            Envie um CSV com as colunas: <strong>cpf</strong>, <strong>email</strong>, <strong>nome</strong>. O CPF deve ter 11 dígitos. Clique em <strong>Enviar lista</strong> para importar; depois em <strong>Concluir</strong> para fechar. Você pode pular esta etapa.
+            Envie um CSV no mesmo formato da lista de candidatos autorizados. Colunas: <strong>Nome</strong>, <strong>CPF</strong>, <strong>Email</strong>, Processo, Tipo, Média ENEM, Curso, Turno. Apenas Nome, CPF e Email são obrigatórios para importar. O CPF deve ter 11 dígitos. Você pode <button type="button" className={styles.linkButton} onClick={downloadModeloCsv}>baixar o modelo CSV</button> e depois <strong>Enviar lista</strong>; em seguida <strong>Concluir</strong> para fechar. Esta etapa é opcional.
           </p>
           <div className={styles.fileWrap}>
             <input
