@@ -28,6 +28,7 @@ export function Menu({ isOpen, onClose, variant = "company", isAtendente = false
   const isCandidate = variant === "candidate";
   const showDashboard = !isCandidate && !isAtendente;
   const showFuncionarios = !isCandidate && !isAtendente;
+  const showCursos = !isCandidate && !isAtendente;
 
   const handleLogout = () => {
     onClose();
@@ -75,6 +76,12 @@ export function Menu({ isOpen, onClose, variant = "company", isAtendente = false
             <Link href="/funcionarios" {...linkProps}>
               <Image src="/icons/user-add.svg" alt="" width={15} height={15} />
               <span>Funcionários</span>
+            </Link>
+          )}
+          {showCursos && (
+            <Link href="/cursos" {...linkProps}>
+              <Image src="/icons/fi-rs-browser.svg" alt="" width={15} height={15} />
+              <span>Cursos</span>
             </Link>
           )}
           {!isCandidate && (

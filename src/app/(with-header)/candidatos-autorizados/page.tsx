@@ -50,8 +50,6 @@ const CSV_HEADERS = [
   "Nome",
   "CPF",
   "Email",
-  "Processo",
-  "Tipo",
   "Média ENEM",
   "Curso",
   "Turno",
@@ -173,8 +171,6 @@ export default function CandidatosAutorizadosPage() {
                 item.name,
                 item.cpf.replace(/\D/g, ""),
                 item.email ?? "",
-                item.process_name,
-                typeLabel(item.process_type),
                 item.media_enem ?? "",
                 item.curso ?? "",
                 item.turno ?? "",
@@ -190,7 +186,7 @@ export default function CandidatosAutorizadosPage() {
             className={styles.csvButtonSecondary}
             onClick={() => {
               downloadCsv("modelo-candidatos-autorizados.csv", [
-                ["Fulano da Silva", "12345678900", "fulano@email.com", "Processo 2025", "Novo Processo", "583,92", "Engenharia de Software", "manha"],
+                ["Fulano da Silva", "12345678900", "fulano@email.com", "583,92", "Engenharia de Software", "Matutino"],
               ]);
             }}
           >

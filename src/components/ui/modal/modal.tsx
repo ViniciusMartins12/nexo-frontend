@@ -21,7 +21,9 @@ export type ProcessCreated = {
   created_at: string;
 };
 
-export type VacancyRow = { curso: string; turno: string; quantidade: number };
+export type VacancyRow = { curso: string; turno: string; quantidade: number; selectedCourseId?: string };
+
+type InstitutionCourseItem = { id: string; code: string; name: string; turno: string; semesters: number; created_at: string };
 
 export type ProcessForEdit = ProcessCreated & {
   guidelines?: string | null;
@@ -29,7 +31,7 @@ export type ProcessForEdit = ProcessCreated & {
   vacancies?: VacancyRow[] | null;
 };
 
-type ParticipantRow = { cpf: string; email: string; name: string };
+type ParticipantRow = { cpf: string; email: string; name: string; media_enem?: string; curso?: string; turno?: string };
 
 type ModalProps = {
   isOpen: boolean;
@@ -62,6 +64,38 @@ function StepIndicator({
   );
 }
 
+/** Parse uma linha CSV respeitando campos entre aspas (ex.: "800,92" é um único campo). */
+function parseCsvLine(line: string, sep: string): string[] {
+  const fields: string[] = [];
+  let i = 0;
+  while (i < line.length) {
+    if (line[i] === '"') {
+      let field = "";
+      i++;
+      while (i < line.length) {
+        if (line[i] === '"') {
+          i++;
+          if (line[i] === '"') {
+            field += '"';
+            i++;
+          } else break;
+        } else {
+          field += line[i];
+          i++;
+        }
+      }
+      fields.push(field.trim());
+      if (line[i] === sep) i += sep.length;
+    } else {
+      const end = line.indexOf(sep, i);
+      const slice = end === -1 ? line.slice(i) : line.slice(i, end);
+      fields.push(slice.trim().replace(/^["']|["']$/g, ""));
+      i = end === -1 ? line.length : end + sep.length;
+    }
+  }
+  return fields;
+}
+
 function parseCsvPreview(file: File): Promise<ParticipantRow[]> {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -73,13 +107,14 @@ function parseCsvPreview(file: File): Promise<ParticipantRow[]> {
         return;
       }
       const sep = text.includes(";") ? ";" : ",";
-      const rawRows = lines.map((l) =>
-        l.split(sep).map((c) => c.trim().replace(/^["']|["']$/g, ""))
-      );
-      const header = rawRows[0].map((h) => h.toLowerCase());
+      const rawRows = lines.map((l) => parseCsvLine(l, sep));
+      const header = rawRows[0].map((h) => h.toLowerCase().normalize("NFD").replace(/\u0300/g, ""));
       const cpfIdx = header.findIndex((h) => h === "cpf");
       const emailIdx = header.findIndex((h) => h === "email");
       const nameIdx = header.findIndex((h) => h === "nome" || h === "name");
+      const mediaEnemIdx = header.findIndex((h) => h === "media enem" || h === "média enem");
+      const cursoIdx = header.findIndex((h) => h === "curso");
+      const turnoIdx = header.findIndex((h) => h === "turno");
       const hasHeader = cpfIdx >= 0 || emailIdx >= 0 || nameIdx >= 0;
       const start = hasHeader ? 1 : 0;
       const rows: ParticipantRow[] = [];
@@ -88,8 +123,11 @@ function parseCsvPreview(file: File): Promise<ParticipantRow[]> {
         const cpf = (hasHeader && cpfIdx >= 0 ? r[cpfIdx] : r[0]) ?? "";
         const email = (hasHeader && emailIdx >= 0 ? r[emailIdx] : r[1]) ?? "";
         const name = (hasHeader && nameIdx >= 0 ? r[nameIdx] : r[2]) ?? r[1] ?? "";
+        const media_enem = (hasHeader && mediaEnemIdx >= 0 ? r[mediaEnemIdx] : r[3]) ?? "";
+        const curso = (hasHeader && cursoIdx >= 0 ? r[cursoIdx] : r[4]) ?? "";
+        const turno = (hasHeader && turnoIdx >= 0 ? r[turnoIdx] : r[5]) ?? "";
         if (cpf.replace(/\D/g, "").length === 11) {
-          rows.push({ cpf, email, name });
+          rows.push({ cpf, email, name, media_enem, curso, turno });
         }
       }
       resolve(rows);
@@ -120,9 +158,19 @@ export function Modal({
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
+  const [institutionCourses, setInstitutionCourses] = useState<InstitutionCourseItem[]>([]);
 
   const isEdit = Boolean(initialProcess?.id);
   const currentProcessId = processId ?? initialProcess?.id ?? null;
+
+  useEffect(() => {
+    if (isOpen && !initialProcess) {
+      fetch(`${API_URL}/institution-courses`, { credentials: "include" })
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data: InstitutionCourseItem[]) => setInstitutionCourses(Array.isArray(data) ? data : []))
+        .catch(() => setInstitutionCourses([]));
+    }
+  }, [isOpen, initialProcess]);
 
   useEffect(() => {
     if (isOpen && initialProcess) {
@@ -262,6 +310,7 @@ export function Modal({
             setUploadError={setUploadError}
             vacancies={vacancies}
             setVacancies={setVacancies}
+            institutionCourses={institutionCourses}
             onClose={onClose}
           />
         </Stepper>
@@ -301,6 +350,7 @@ function ModalContent({
   setUploadError,
   vacancies,
   setVacancies,
+  institutionCourses,
   onClose,
 }: {
   name: string;
@@ -333,10 +383,12 @@ function ModalContent({
   setUploadError: (v: string | null) => void;
   vacancies: VacancyRow[];
   setVacancies: (v: VacancyRow[] | ((prev: VacancyRow[]) => VacancyRow[])) => void;
+  institutionCourses: InstitutionCourseItem[];
   onClose: () => void;
 }) {
   const { currentStep, nextStep, prevStep } = useStepper();
   const [vagasLoading, setVagasLoading] = useState(false);
+  const hasCourses = institutionCourses.length > 0;
   const TURNOS = [
     { value: "manha", label: "Manhã" },
     { value: "tarde", label: "Tarde" },
@@ -345,12 +397,12 @@ function ModalContent({
   ];
 
   function downloadModeloCsv() {
-    const headers = ["Nome", "CPF", "Email", "Processo", "Tipo", "Média ENEM", "Curso", "Turno"];
+    const headers = ["Nome", "CPF", "Email", "Média ENEM", "Curso", "Turno"];
     const escape = (v: string) => {
       const s = String(v).replace(/"/g, '""');
       return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
     };
-    const row = ["Fulano da Silva", "12345678900", "fulano@email.com", "Processo 2025", "Novo Processo", "583,92", "Engenharia de Software", "manha"];
+    const row = ["Fulano da Silva", "12345678900", "fulano@email.com", "583,92", "Engenharia de Software", "Matutino"];
     const line = (arr: string[]) => arr.map(escape).join(",");
     const csv = "\uFEFF" + line(headers) + "\r\n" + line(row);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -422,6 +474,11 @@ function ModalContent({
         <div className={styles.container}>
           <div className={styles.form}>
             <h1>{isEdit ? "Editar processo" : "Crie seu processo"}</h1>
+            {!isEdit && institutionCourses.length === 0 && (
+              <div className={styles.coursesWarning} role="alert">
+                Adicione os cursos da instituição em <strong>Cursos</strong> antes de criar um processo, para definir vagas por curso e turno.
+              </div>
+            )}
             <Input
               label="Nome do processo"
               variant="text"
@@ -501,67 +558,133 @@ function ModalContent({
           <p className={styles.stepDesc}>
             Defina a quantidade de vagas para cada combinação de curso e turno. Você pode pular ou adicionar depois.
           </p>
-          <div className={styles.vagasList}>
-            {vacancies.map((row, idx) => (
-              <div key={idx} className={styles.vagaRow}>
-                <Input
-                  label="Curso"
-                  variant="text"
-                  value={row.curso}
-                  onChange={(e) =>
-                    setVacancies((prev) => {
-                      const next = [...prev];
-                      next[idx] = { ...next[idx], curso: e.target.value };
-                      return next;
-                    })
-                  }
-                  placeholder="Ex.: Engenharia de Software"
-                />
-                <Selected
-                  label="Turno"
-                  value={row.turno}
-                  onChange={(e) =>
-                    setVacancies((prev) => {
-                      const next = [...prev];
-                      next[idx] = { ...next[idx], turno: e.target.value };
-                      return next;
-                    })
-                  }
-                  options={TURNOS}
-                />
-                <Input
-                  label="Quantidade"
-                  variant="number"
-                  min={0}
-                  value={row.quantidade > 0 ? String(row.quantidade) : ""}
-                  onChange={(e) => {
-                    const n = parseInt(e.target.value, 10);
-                    setVacancies((prev) => {
-                      const next = [...prev];
-                      next[idx] = { ...next[idx], quantidade: Number.isFinite(n) && n >= 0 ? n : 0 };
-                      return next;
-                    });
-                  }}
-                  placeholder="0"
-                />
-                <button
-                  type="button"
-                  className={styles.removeVaga}
-                  onClick={() => setVacancies((prev) => prev.filter((_, i) => i !== idx))}
-                  aria-label="Remover linha"
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-            <Button
-              variant="ghost"
-              text="+ Adicionar vaga"
-              onClick={() =>
-                setVacancies((prev) => [...prev, { curso: "", turno: "manha", quantidade: 0 }])
-              }
-            />
-          </div>
+          {hasCourses ? (
+            <div className={styles.vagasList}>
+              {vacancies.map((row, idx) => {
+                const matchedCourseId = row.selectedCourseId ?? institutionCourses.find((c) => c.name === row.curso && c.turno === row.turno)?.id ?? "";
+                return (
+                  <div key={idx} className={`${styles.vagaRow} ${styles.vagaRowCourse}`}>
+                    <div className={styles.selectWrap}>
+                      <label className={styles.label}>Curso</label>
+                      <select
+                        className={styles.select}
+                        value={matchedCourseId}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          const course = institutionCourses.find((c) => c.id === id);
+                          if (!course) return;
+                          setVacancies((prev) => {
+                            const next = [...prev];
+                            next[idx] = { ...next[idx], selectedCourseId: course.id, curso: course.name, turno: course.turno };
+                            return next;
+                          });
+                        }}
+                      >
+                        <option value="">Selecione o curso</option>
+                        {institutionCourses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.code} – {c.name} ({c.turno})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Input
+                      label="Quantidade"
+                      variant="number"
+                      min={0}
+                      value={row.quantidade > 0 ? String(row.quantidade) : ""}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value, 10);
+                        setVacancies((prev) => {
+                          const next = [...prev];
+                          next[idx] = { ...next[idx], quantidade: Number.isFinite(n) && n >= 0 ? n : 0 };
+                          return next;
+                        });
+                      }}
+                      placeholder="0"
+                    />
+                    <button
+                      type="button"
+                      className={styles.removeVaga}
+                      onClick={() => setVacancies((prev) => prev.filter((_, i) => i !== idx))}
+                      aria-label="Remover linha"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                );
+              })}
+              <Button
+                variant="ghost"
+                text="+ Adicionar vaga"
+                onClick={() =>
+                  setVacancies((prev) => [...prev, { curso: "", turno: "manha", quantidade: 0 }])
+                }
+              />
+            </div>
+          ) : (
+            <div className={styles.vagasList}>
+              {vacancies.map((row, idx) => (
+                <div key={idx} className={styles.vagaRow}>
+                  <Input
+                    label="Curso"
+                    variant="text"
+                    value={row.curso}
+                    onChange={(e) =>
+                      setVacancies((prev) => {
+                        const next = [...prev];
+                        next[idx] = { ...next[idx], curso: e.target.value };
+                        return next;
+                      })
+                    }
+                    placeholder="Ex.: Engenharia de Software"
+                  />
+                  <Selected
+                    label="Turno"
+                    value={row.turno}
+                    onChange={(e) =>
+                      setVacancies((prev) => {
+                        const next = [...prev];
+                        next[idx] = { ...next[idx], turno: e.target.value };
+                        return next;
+                      })
+                    }
+                    options={TURNOS}
+                  />
+                  <Input
+                    label="Quantidade"
+                    variant="number"
+                    min={0}
+                    value={row.quantidade > 0 ? String(row.quantidade) : ""}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      setVacancies((prev) => {
+                        const next = [...prev];
+                        next[idx] = { ...next[idx], quantidade: Number.isFinite(n) && n >= 0 ? n : 0 };
+                        return next;
+                      });
+                    }}
+                    placeholder="0"
+                  />
+                  <button
+                    type="button"
+                    className={styles.removeVaga}
+                    onClick={() => setVacancies((prev) => prev.filter((_, i) => i !== idx))}
+                    aria-label="Remover linha"
+                  >
+                    Remover
+                  </button>
+                </div>
+              ))}
+              <Button
+                variant="ghost"
+                text="+ Adicionar vaga"
+                onClick={() =>
+                  setVacancies((prev) => [...prev, { curso: "", turno: "manha", quantidade: 0 }])
+                }
+              />
+            </div>
+          )}
           <div className={styles.buttons}>
             <Button variant="ghost" text="Voltar" onClick={prevStep} />
             <Button
@@ -608,7 +731,7 @@ function ModalContent({
         <div className={styles.stepContent}>
           <h2 className={styles.stepTitle}>Lista de participantes</h2>
           <p className={styles.stepDesc}>
-            Envie um CSV no mesmo formato da lista de candidatos autorizados. Colunas: <strong>Nome</strong>, <strong>CPF</strong>, <strong>Email</strong>, Processo, Tipo, Média ENEM, Curso, Turno. Apenas Nome, CPF e Email são obrigatórios para importar. O CPF deve ter 11 dígitos. Você pode <button type="button" className={styles.linkButton} onClick={downloadModeloCsv}>baixar o modelo CSV</button> e depois <strong>Enviar lista</strong>; em seguida <strong>Concluir</strong> para fechar. Esta etapa é opcional.
+            Envie um CSV no formato: <strong>Nome</strong>, <strong>CPF</strong>, <strong>Email</strong>, <strong>Média ENEM</strong>, <strong>Curso</strong>, <strong>Turno</strong>. Apenas Nome, CPF e Email são obrigatórios para importar. O CPF deve ter 11 dígitos. Você pode <button type="button" className={styles.linkButton} onClick={downloadModeloCsv}>baixar o modelo CSV</button> e depois <strong>Enviar lista</strong>; em seguida <strong>Concluir</strong> para fechar. Esta etapa é opcional.
           </p>
           <div className={styles.fileWrap}>
             <input
@@ -630,17 +753,23 @@ function ModalContent({
                 <table>
                   <thead>
                     <tr>
+                      <th>Nome</th>
                       <th>CPF</th>
                       <th>Email</th>
-                      <th>Nome</th>
+                      <th>Média ENEM</th>
+                      <th>Curso</th>
+                      <th>Turno</th>
                     </tr>
                   </thead>
                   <tbody>
                     {csvPreview.slice(0, 10).map((row, i) => (
                       <tr key={i}>
+                        <td>{row.name}</td>
                         <td>{row.cpf.replace(/\D/g, "").slice(0, 11)}</td>
                         <td>{row.email}</td>
-                        <td>{row.name}</td>
+                        <td>{row.media_enem ?? ""}</td>
+                        <td>{row.curso ?? ""}</td>
+                        <td>{row.turno ?? ""}</td>
                       </tr>
                     ))}
                   </tbody>

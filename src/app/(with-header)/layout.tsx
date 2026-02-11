@@ -10,7 +10,7 @@ import { playNotificationSound } from "@/lib/playNotificationSound";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-const ATENDENTE_BLOCKED_PATHS = ["/dashboard", "/funcionarios"];
+const ATENDENTE_BLOCKED_PATHS = ["/dashboard", "/funcionarios", "/cursos"];
 
 type ConversationItem = {
   id: string | null;
