@@ -2,6 +2,43 @@
 
 .section {
   padding: 0 0 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Aba de documentos – layout amplo e legível */
+.documentsStepWrap {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding: 24px 20px 32px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.documentsStepInner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.documentsStepWrap .form {
+  gap: 20px;
+}
+
+.documentsStepWrap .formTitle {
+  font-size: 1.375rem;
+  margin-bottom: 6px;
+}
+
+.documentsStepWrap .formDesc {
+  margin-bottom: 20px;
+  line-height: 1.5;
+  max-width: 640px;
 }
 
 .loading,
@@ -40,26 +77,43 @@
   margin: 0 0 24px;
 }
 
+/* Barra de etapas – horizontal, uniforme, responsiva */
 .steps {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin-bottom: 28px;
+  padding: 4px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.steps::-webkit-scrollbar {
+  height: 6px;
+}
+
+.steps::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
 .stepTab {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  font-size: 0.9375rem;
+  padding: 12px 18px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: $color-text-placeholder;
-  background: $background-secondary;
-  border: 1px solid $color-border-input;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .stepTab:hover {
@@ -68,8 +122,8 @@
 }
 
 .stepTab.active {
-  color: $color-secondary;
-  background: rgba(0, 74, 173, 0.15);
+  color: #fff;
+  background: $color-primary;
   border-color: $color-primary;
 }
 
@@ -77,27 +131,36 @@
   color: $color-text-primary;
 }
 
+.stepTab.done .stepNum {
+  background: rgba(76, 175, 80, 0.3);
+  color: #4caf50;
+}
+
 .stepNum {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
   font-size: 0.8125rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
 }
 
 .stepTab.active .stepNum {
-  background: $color-primary;
+  background: rgba(255, 255, 255, 0.25);
   color: #fff;
 }
 
 .panel {
   background: $background-secondary;
-  border-radius: 8px;
-  padding: 24px;
-  border: 1px solid $color-border-input;
+  border-radius: 12px;
+  padding: 28px 32px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form {
@@ -257,6 +320,10 @@
   list-style: none;
   padding: 0;
   margin: 0 0 24px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .docListTitle {
@@ -270,9 +337,22 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 0;
+  padding: 10px 14px;
   font-size: 0.875rem;
-  border-bottom: 1px solid $color-border-input;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.docItem:last-child {
+  border-bottom: none;
+}
+
+.docItemClickable {
+  cursor: pointer;
+}
+
+.docItemClickable:hover .docNameLink {
+  text-decoration: underline;
 }
 
 .docLabel {
@@ -285,32 +365,55 @@
   color: $color-text-placeholder;
 }
 
+.docNameLink {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  color: $color-primary;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.docNameLink:hover {
+  color: #2a6fd4;
+}
+
 /* Checklist de documentos por familiar */
 .docChecklistWrap {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: 28px;
+  margin-bottom: 28px;
 }
 
 .docFamiliarBlock {
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  border: 1px solid $color-border-input;
+  padding: 20px 20px 24px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.docFamiliarBlock:first-child {
+  border-left: 3px solid $color-primary;
 }
 
 .docFamiliarName {
   font-size: 1.0625rem;
   font-weight: 600;
-  color: $color-secondary;
-  margin: 0 0 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid $color-border-input;
+  color: $color-text-primary;
+  margin: 0 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.02em;
 }
 
 .docSection {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .docSection:last-child {
@@ -318,62 +421,626 @@
 }
 
 .docSectionTitle {
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: $color-text-primary;
-  margin: 0 0 8px;
+  color: $color-text-placeholder;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 10px;
 }
 
 .docChecklist {
   list-style: none;
   padding: 0;
   margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .docChecklistItem {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 14px;
+  padding: 12px 14px;
   font-size: 0.875rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.15s ease;
 }
 
 .docChecklistItem:last-child {
   border-bottom: none;
 }
 
+.docChecklistItem:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .docItemNum {
   font-weight: 600;
   color: $color-text-placeholder;
   min-width: 2.5em;
+  font-size: 0.8125rem;
 }
 
 .docItemLabel {
   color: $color-text-primary;
-  line-height: 1.35;
+  line-height: 1.4;
+  font-size: 0.875rem;
 }
 
 .docItemActions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .docEnviado {
+  appearance: none;
+  background: rgba(0, 74, 173, 0.15);
+  border: 1px solid rgba(0, 74, 173, 0.35);
+  border-radius: 6px;
+  padding: 6px 10px;
   font-size: 0.8125rem;
-  color: $color-text-placeholder;
-  font-style: italic;
+  color: $color-primary;
+  cursor: pointer;
+  font-style: normal;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
 }
 
-.docOcultarBtn {
-  margin-left: auto;
+.docEnviado:hover {
+  background: rgba(0, 74, 173, 0.25);
+  border-color: $color-primary;
+}
+
+.docEnviadoLabel {
+  font-size: 0.8125rem;
+  color: $color-primary;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.docChecklistItemClickable {
+  cursor: pointer;
+}
+
+.docChecklistItemClickable:hover .docEnviadoLabel {
+  text-decoration: underline;
+}
+
+.docOcultarBtn,
+.docAlterarBtn {
+  margin-left: 0;
 }
 
 .docHint {
   font-size: 0.8125rem;
   color: $color-text-placeholder;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Modal de análise IA (Silvia) – card centralizado, sem cobrir a tela */
+.analysisOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 24px;
+}
+
+.analysisBox {
+  background: #232323;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.analysisPreviewWrap {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.analysisPreviewImg {
+  width: 100%;
+  height: 240px;
+  object-fit: contain;
+  display: block;
+}
+
+.analysisPreviewPdf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  gap: 12px;
+  color: $color-text-placeholder;
+}
+
+.analysisPdfIcon {
+  font-size: 3rem;
+  font-weight: 700;
+  color: $color-primary;
+}
+
+.analysisPdfName {
+  font-size: 0.875rem;
+  word-break: break-all;
+  padding: 0 16px;
+}
+
+.scannerLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent 0%, rgba(7, 149, 255, 0.2) 20%, #0795FF 50%, rgba(7, 149, 255, 0.2) 80%, transparent 100%);
+  box-shadow: 0 0 20px #0795FF, 0 0 40px rgba(7, 149, 255, 0.5);
+  animation: scannerMove 2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scannerMove {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+.analysisTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $color-primary;
+  margin: 0 0 4px;
+}
+
+.analysisSubtitle {
+  font-size: 0.9375rem;
+  color: $color-text-placeholder;
+  margin: 0;
+}
+
+.analysisOk {
+  color: #4caf50;
+}
+
+.analysisFail {
+  color: $color-text-error;
+}
+
+.analysisDismissBtn {
+  margin-top: 16px;
+}
+
+/* Modal de preview do documento: imagem rolável + validações Silvia + Enviar só após validação */
+.previewDocOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.previewDocWrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-width: 1400px;
+  max-height: 90vh;
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.previewDocHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #252525;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.previewDocTitle {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: $color-text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.previewDocClose {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 8px;
+  color: $color-text-primary;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.previewDocClose:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.previewDocLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  flex: 1;
+  min-height: 0;
+}
+
+.previewDocImageWrap {
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #2d2d2d;
+}
+
+.previewDocImage {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.previewDocPdf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: $color-text-placeholder;
+  padding: 24px;
+}
+
+.previewDocSide {
+  padding: 20px 24px;
+  background: #252525;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.previewDocAnalyzing {
+  font-size: 0.9375rem;
+  color: $color-text-placeholder;
+  margin: 0;
+}
+
+.previewDocSendBtn {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.extractedRgBlock {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.extractedRgTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-text-primary;
   margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.extractedRgList {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.extractedRgList dt {
+  color: $color-text-placeholder;
+  margin: 0;
+}
+
+.extractedRgList dd {
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.docPreviewHint {
+  font-size: 0.75rem;
+  color: $color-text-placeholder;
+}
+
+@media (max-width: 900px) {
+  .previewDocLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modal estilo Drive: fundo escurecido + documento com div das validações ao lado */
+.viewerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.viewerWrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-width: 1400px;
+  max-height: 90vh;
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.viewerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px 12px 24px;
+  background: #252525;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.viewerTitle {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: $color-text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewerClose {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 10px;
+  color: $color-text-primary;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.viewerClose:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.viewerContent {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: #2d2d2d;
+  position: relative;
+}
+
+.viewerLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-placeholder;
+  font-size: 0.9375rem;
+}
+
+.viewerIframe {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border: none;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.viewerImg {
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.viewerLayout {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+}
+
+.viewerDoc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #2d2d2d;
+  min-height: 0;
+}
+
+.viewerSide {
+  padding: 20px 24px;
+  background: #252525;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  min-width: 280px;
+}
+
+.viewerSideTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0 0 4px;
+}
+
+.viewerSideMuted {
+  font-size: 0.875rem;
+  color: $color-text-placeholder;
+  margin: 0 0 4px;
+}
+
+.viewerSideHint {
+  font-size: 0.8125rem;
+  color: $color-text-placeholder;
+  margin: 0;
+}
+
+.viewerSideValidation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.viewerSideStatusOk {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #4caf50;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.viewerSideStatusFail {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-text-error;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.viewerSideList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 12px;
+}
+
+.viewerSideListItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  font-size: 0.8125rem;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.viewerSideListItem:last-child {
+  border-bottom: none;
+}
+
+.viewerSideItemLabel {
+  color: $color-text-primary;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.viewerSideItemOk {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.viewerSideItemFail {
+  color: $color-text-error;
+  font-weight: 600;
+}
+
+.viewerSideItemMuted {
+  color: $color-text-placeholder;
+}
+
+.viewerSideItemDetail {
+  width: 100%;
+  font-size: 0.75rem;
+  color: $color-text-placeholder;
+  margin-left: 0;
+}
+
+@media (max-width: 900px) {
+  .viewerLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .viewerSide {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
 }

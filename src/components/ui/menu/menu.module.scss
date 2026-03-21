@@ -68,4 +68,75 @@
     font-size: 1rem;
     line-height: 1;
   }
+
+  .logoWrap {
+    margin: 8px 0;
+  }
+
+  .logoSilviIALink {
+    display: inline-flex;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .logoSilviIA {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    transition: transform 0.2s ease;
+  }
+
+  .logoSilviIALink:hover .logoSilviIA {
+    animation: menuLogoHoverTech 1.2s ease-in-out;
+  }
+
+  .logoIcon {
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s ease;
+  }
+
+  .logoSilviIALink:hover .logoIcon {
+    animation: menuIconPulse 0.6s ease-in-out;
+  }
+
+  .logoWord {
+    color: $color-text-primary;
+  }
+
+  .logoIA {
+    background: linear-gradient(135deg, #0795FF 0%, #004AAD 50%, #003580 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  .logoSilviIALink:hover .logoIA {
+    animation: menuGradientShift 1.5s ease infinite;
+  }
+
+  @keyframes menuLogoHoverTech {
+    0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+    15% { filter: drop-shadow(0 0 8px rgba(7, 149, 255, 0.4)); }
+    30% { filter: drop-shadow(0 0 12px rgba(0, 74, 173, 0.5)); }
+    50% { filter: drop-shadow(0 0 6px rgba(7, 149, 255, 0.6)); }
+    70% { filter: drop-shadow(0 0 10px rgba(0, 74, 173, 0.4)); }
+    85% { filter: drop-shadow(0 0 4px rgba(7, 149, 255, 0.3)); }
+  }
+
+  @keyframes menuIconPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.9; }
+  }
+
+  @keyframes menuGradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 }

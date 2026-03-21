@@ -10,6 +10,28 @@ import { DOCUMENT_CHECKLIST } from "./documentChecklist";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+type SilviaValidationItem = { label: string; status: string; detail?: string };
+type ExtractedRg = {
+  nome?: string | null;
+  nomeMae?: string | null;
+  nomePai?: string | null;
+  dataNascimento?: string | null;
+  idade?: number | null;
+  cpf?: string | null;
+  rgNumero?: string | null;
+  orgaoExpedidor?: string | null;
+  dataEmissao?: string | null;
+  assinatura?: boolean | null;
+  foto?: boolean | null;
+  naturalidade?: string | null;
+};
+type SilviaValidation = {
+  approved: boolean;
+  message: string;
+  items?: SilviaValidationItem[];
+  extractedRg?: ExtractedRg | null;
+};
+
 const DOC_LABEL_PREFIX = "DOC"; // prefixo para match: DOC|candidato|1.1|label
 
 // Tipos das seções
@@ -192,7 +214,78 @@ export default function CandidatoProcessoInscricaoPage() {
     itemLabel: string;
     file: File | null;
   } | null>(null);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [analysisPreviewUrl, setAnalysisPreviewUrl] = useState<string | null>(null);
+  const [silviaResult, setSilviaResult] = useState<SilviaValidation | null>(null);
+  const [viewerDocument, setViewerDocument] = useState<{ id: string; fileName: string } | null>(null);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewerLoading, setViewerLoading] = useState(false);
+  const [viewerSilvia, setViewerSilvia] = useState<SilviaValidation | null>(null);
+  const [documentValidations, setDocumentValidations] = useState<Record<string, SilviaValidation>>({});
+  const [replacingRow, setReplacingRow] = useState<{
+    docId: string;
+    familiarKey: string;
+    itemId: string;
+    itemLabel: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!showAnalysisModal || !selectedForUpload?.file) return;
+    const file = selectedForUpload.file;
+    const isImage = file.type.startsWith("image/");
+    let url: string | null = null;
+    if (isImage) {
+      url = URL.createObjectURL(file);
+      setAnalysisPreviewUrl(url);
+    } else {
+      setAnalysisPreviewUrl(null);
+    }
+    setSilviaResult(null);
+
+    const form = new FormData();
+    form.append("file", file);
+    const label = selectedForUpload?.itemLabel?.toLowerCase() ?? "";
+    if (label.includes("rg") || label.includes("identidade") || label.includes("carteira de identidade")) {
+      form.append("document_type", "rg");
+    }
+    fetch(`${API_URL}/silvia/validate`, { method: "POST", credentials: "include", body: form })
+      .then((res) => (res.ok ? res.json() : { approved: false, message: "Erro na análise." }))
+      .then((data: { approved?: boolean; message?: string; items?: SilviaValidationItem[]; extractedRg?: ExtractedRg }) =>
+        setSilviaResult({
+          approved: Boolean(data.approved),
+          message: data.message ?? (data.approved ? "Documento aceito." : "Documento não aprovado."),
+          items: data.items,
+          extractedRg: data.extractedRg ?? null,
+        })
+      )
+      .catch(() => setSilviaResult({ approved: false, message: "Falha ao analisar. Tente enviar mesmo assim." }));
+
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [showAnalysisModal, selectedForUpload?.file]);
+
+  useEffect(() => {
+    if (!viewerDocument || !processId) {
+      setViewerUrl(null);
+      return;
+    }
+    setViewerUrl(null);
+    setViewerLoading(true);
+    fetch(
+      `${API_URL}/candidato/processos/${processId}/inscricao/documentos/${viewerDocument.id}/url`,
+      { credentials: "include" }
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error("Link não disponível");
+        return res.json();
+      })
+      .then((body: { url: string }) => setViewerUrl(body.url))
+      .catch(() => setError("Não foi possível abrir o documento."))
+      .finally(() => setViewerLoading(false));
+  }, [viewerDocument?.id, processId]);
 
   useEffect(() => {
     if (!processId) return;
@@ -310,7 +403,8 @@ export default function CandidatoProcessoInscricaoPage() {
     file: File,
     familiarKey: string,
     itemId: string,
-    itemLabel: string
+    itemLabel: string,
+    replaceDocId?: string | null
   ) {
     const label = buildDocLabel(familiarKey, itemId, itemLabel);
     setUploadFile(file);
@@ -318,6 +412,21 @@ export default function CandidatoProcessoInscricaoPage() {
     setUploading(true);
     setError(null);
     try {
+      if (replaceDocId && processId) {
+        const deleteUrl = `${API_URL}/candidato/processos/${processId}/inscricao/documentos/${replaceDocId}`;
+        const delRes = await fetch(deleteUrl, { method: "DELETE", credentials: "include" });
+        if (!delRes.ok) throw new Error("Erro ao remover documento anterior.");
+        if (data) {
+          setData((prev) =>
+            prev ? { ...prev, documents: prev.documents.filter((d) => d.id !== replaceDocId) } : prev
+          );
+          setDocumentValidations((prev) => {
+            const next = { ...prev };
+            delete next[replaceDocId];
+            return next;
+          });
+        }
+      }
       const form = new FormData();
       form.append("file", file);
       form.append("document_label", label);
@@ -344,9 +453,21 @@ export default function CandidatoProcessoInscricaoPage() {
               }
             : prev
         );
+        const validation: SilviaValidation = silviaResult ?? { approved: false, message: "Não analisado pela Silvia." };
+        setDocumentValidations((prev) => ({ ...prev, [doc.id]: validation }));
+        setViewerDocument({ id: doc.id, fileName: doc.file_name });
+        setViewerSilvia(validation);
       }
       setSelectedForUpload(null);
+      setReplacingRow(null);
+      setSilviaResult(null);
+      setShowAnalysisModal(false);
+      setAnalysisPreviewUrl((u) => {
+        if (u) URL.revokeObjectURL(u);
+        return null;
+      });
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (replaceInputRef.current) replaceInputRef.current.value = "";
     } catch {
       setError("Erro ao enviar documento.");
     } finally {
@@ -1173,6 +1294,29 @@ export default function CandidatoProcessoInscricaoPage() {
 
         {/* SEÇÃO 10 – DOCUMENTOS (checklist por familiar) */}
         {currentStep === 9 && (
+          <div className={styles.documentsStepWrap}>
+            <input
+              type="file"
+              ref={replaceInputRef}
+              className={styles.fileInputHidden}
+              accept=".pdf,.jpg,.jpeg,.png"
+              aria-hidden
+              style={{ position: "absolute", left: -9999 }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && replacingRow) {
+                  setSelectedForUpload({
+                    familiarKey: replacingRow.familiarKey,
+                    itemId: replacingRow.itemId,
+                    itemLabel: replacingRow.itemLabel,
+                    file,
+                  });
+                  setShowAnalysisModal(true);
+                }
+                e.target.value = "";
+              }}
+            />
+            <div className={styles.documentsStepInner}>
           <div className={styles.form}>
             <h2 className={styles.formTitle}>Documentos</h2>
             <p className={styles.formDesc}>
@@ -1210,21 +1354,47 @@ export default function CandidatoProcessoInscricaoPage() {
                               )
                               .map((item) => {
                                 const doc = getDocForRow(familiarKey, item.id);
+                                const isReplacing =
+                                  replacingRow?.familiarKey === familiarKey && replacingRow?.itemId === item.id;
                                 const isSelected =
                                   selectedForUpload?.familiarKey === familiarKey &&
                                   selectedForUpload?.itemId === item.id;
+                                const showEnviado = doc && !isReplacing;
                                 return (
                                   <li
                                     key={`${familiarKey}-${item.id}`}
-                                    className={styles.docChecklistItem}
+                                    className={`${styles.docChecklistItem} ${showEnviado ? styles.docChecklistItemClickable : ""}`}
+                                    role={showEnviado ? "button" : undefined}
+                                    onClick={showEnviado ? () => {
+                                      setViewerDocument({ id: doc!.id, fileName: doc!.fileName });
+                                      setViewerSilvia(documentValidations[doc!.id] ?? null);
+                                    } : undefined}
                                   >
                                     <span className={styles.docItemNum}>{item.id}</span>
                                     <span className={styles.docItemLabel}>{item.label}</span>
                                     <div className={styles.docItemActions}>
-                                      {doc ? (
-                                        <span className={styles.docEnviado}>
-                                          Enviado: {doc.fileName}
-                                        </span>
+                                      {showEnviado ? (
+                                        <>
+                                          <span className={styles.docEnviadoLabel}>
+                                            Enviado: {doc!.fileName}
+                                          </span>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            text="Alterar"
+                                            className={styles.docAlterarBtn}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setReplacingRow({
+                                                docId: doc!.id,
+                                                familiarKey,
+                                                itemId: item.id,
+                                                itemLabel: item.label,
+                                              });
+                                              setTimeout(() => replaceInputRef.current?.click(), 0);
+                                            }}
+                                          />
+                                        </>
                                       ) : (
                                         <>
                                           <input
@@ -1233,13 +1403,15 @@ export default function CandidatoProcessoInscricaoPage() {
                                             accept=".pdf,.jpg,.jpeg,.png"
                                             onChange={(e) => {
                                               const file = e.target.files?.[0];
-                                              if (file)
+                                              if (file) {
                                                 setSelectedForUpload({
                                                   familiarKey,
                                                   itemId: item.id,
                                                   itemLabel: item.label,
                                                   file,
                                                 });
+                                                setShowAnalysisModal(true);
+                                              }
                                             }}
                                             id={`file-${familiarKey}-${item.id}`}
                                           />
@@ -1253,39 +1425,21 @@ export default function CandidatoProcessoInscricaoPage() {
                                                 : "Escolher arquivo"}
                                             </span>
                                           </label>
-                                          <Button
-                                            size="sm"
-                                            text="Enviar"
-                                            loading={
-                                              uploading &&
-                                              selectedForUpload?.familiarKey === familiarKey &&
-                                              selectedForUpload?.itemId === item.id
-                                            }
-                                            disabled={!isSelected || !selectedForUpload?.file}
-                                            onClick={() => {
-                                              if (
-                                                selectedForUpload?.familiarKey === familiarKey &&
-                                                selectedForUpload?.itemId === item.id &&
-                                                selectedForUpload?.file
-                                              ) {
-                                                handleUploadForRow(
-                                                  selectedForUpload.file,
-                                                  familiarKey,
-                                                  item.id,
-                                                  item.label
-                                                );
-                                              }
-                                            }}
-                                          />
+                                          {isSelected && selectedForUpload?.file && (
+                                            <span className={styles.docPreviewHint}>
+                                              Abra o preview ao lado para validar e enviar.
+                                            </span>
+                                          )}
                                         </>
                                       )}
                                       <Button
                                         variant="ghost"
                                         size="sm"
                                         text="Ocultar"
-                                        onClick={() =>
-                                          toggleDocItemHidden(familiarKey, item.id)
-                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleDocItemHidden(familiarKey, item.id);
+                                        }}
                                         className={styles.docOcultarBtn}
                                       />
                                     </div>
@@ -1309,9 +1463,17 @@ export default function CandidatoProcessoInscricaoPage() {
                 {data.documents
                   .filter((d) => !d.documentLabel.includes("|"))
                   .map((d) => (
-                    <li key={d.id} className={styles.docItem}>
+                    <li
+                      key={d.id}
+                      className={`${styles.docItem} ${styles.docItemClickable}`}
+                      role="button"
+                      onClick={() => {
+                        setViewerDocument({ id: d.id, fileName: d.fileName });
+                        setViewerSilvia(documentValidations[d.id] ?? null);
+                      }}
+                    >
                       <span className={styles.docLabel}>{d.documentLabel}</span>
-                      <span className={styles.docName}>{d.fileName}</span>
+                      <span className={styles.docNameLink}>{d.fileName}</span>
                     </li>
                   ))}
               </ul>
@@ -1321,8 +1483,237 @@ export default function CandidatoProcessoInscricaoPage() {
               <Button variant="ghost" text="Voltar" onClick={() => setCurrentStep(8)} />
             </div>
           </div>
+            </div>
+          </div>
         )}
       </div>
+
+      {showAnalysisModal && selectedForUpload?.file && (
+        <div className={styles.previewDocOverlay} aria-modal="true" role="dialog" aria-label="Preview e validação do documento">
+          <div className={styles.previewDocWrap}>
+            <header className={styles.previewDocHeader}>
+              <span className={styles.previewDocTitle}>{selectedForUpload.file.name}</span>
+              <button
+                type="button"
+                className={styles.previewDocClose}
+                onClick={() => {
+                  setShowAnalysisModal(false);
+                  setSelectedForUpload(null);
+                  setSilviaResult(null);
+                  setAnalysisPreviewUrl((u) => {
+                    if (u) URL.revokeObjectURL(u);
+                    return null;
+                  });
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </header>
+            <div className={styles.previewDocLayout}>
+              <div className={styles.previewDocImageWrap}>
+                {analysisPreviewUrl ? (
+                  <img src={analysisPreviewUrl} alt="Preview do documento" className={styles.previewDocImage} />
+                ) : (
+                  <div className={styles.previewDocPdf}>
+                    <span className={styles.analysisPdfIcon}>PDF</span>
+                    <span className={styles.analysisPdfName}>{selectedForUpload.file.name}</span>
+                  </div>
+                )}
+              </div>
+              <aside className={styles.previewDocSide}>
+                <h3 className={styles.viewerSideTitle}>Validações da Silvia</h3>
+                {!silviaResult ? (
+                  <p className={styles.previewDocAnalyzing}>Analisando documento…</p>
+                ) : (
+                  <>
+                    <div className={styles.viewerSideValidation}>
+                      <span className={silviaResult.approved ? styles.viewerSideStatusOk : styles.viewerSideStatusFail}>
+                        {silviaResult.approved ? "Aprovado" : "Reprovado"}
+                      </span>
+                      <p className={silviaResult.approved ? styles.analysisOk : styles.analysisFail}>
+                        {silviaResult.message}
+                      </p>
+                    </div>
+                    {silviaResult.items && silviaResult.items.length > 0 && (
+                      <ul className={styles.viewerSideList}>
+                        {silviaResult.items.map((item, i) => (
+                          <li key={i} className={styles.viewerSideListItem}>
+                            <span className={styles.viewerSideItemLabel}>{item.label}</span>
+                            <span
+                              className={
+                                item.status === "aprovado"
+                                  ? styles.viewerSideItemOk
+                                  : item.status === "reprovado"
+                                    ? styles.viewerSideItemFail
+                                    : styles.viewerSideItemMuted
+                              }
+                            >
+                              {item.status === "aprovado"
+                                ? "Aprovado"
+                                : item.status === "reprovado"
+                                  ? "Reprovado"
+                                  : item.status === "nao_se_aplica"
+                                    ? "Não se aplica"
+                                    : "Não identificado"}
+                            </span>
+                            {item.detail && <span className={styles.viewerSideItemDetail}>{item.detail}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {silviaResult.extractedRg && (
+                      <div className={styles.extractedRgBlock}>
+                        <h4 className={styles.extractedRgTitle}>Dados extraídos do RG</h4>
+                        <dl className={styles.extractedRgList}>
+                          {silviaResult.extractedRg.nome != null && (
+                            <><dt>Nome</dt><dd>{silviaResult.extractedRg.nome || "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.dataNascimento != null && (
+                            <><dt>Data de nascimento</dt><dd>{silviaResult.extractedRg.dataNascimento || "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.idade != null && (
+                            <><dt>Idade</dt><dd>{silviaResult.extractedRg.idade ?? "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.cpf != null && (
+                            <><dt>CPF</dt><dd>{silviaResult.extractedRg.cpf || "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.rgNumero != null && (
+                            <><dt>Número RG</dt><dd>{silviaResult.extractedRg.rgNumero || "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.orgaoExpedidor != null && (
+                            <><dt>Órgão expedidor</dt><dd>{silviaResult.extractedRg.orgaoExpedidor || "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.nomeMae != null && (
+                            <><dt>Nome da mãe</dt><dd>{silviaResult.extractedRg.nomeMae || "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.nomePai != null && (
+                            <><dt>Nome do pai</dt><dd>{silviaResult.extractedRg.nomePai || "—"}</dd></>
+                          )}
+                          {silviaResult.extractedRg.naturalidade != null && (
+                            <><dt>Naturalidade</dt><dd>{silviaResult.extractedRg.naturalidade || "—"}</dd></>
+                          )}
+                        </dl>
+                      </div>
+                    )}
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      text="Enviar documento"
+                      className={styles.previewDocSendBtn}
+                      loading={
+                        uploading &&
+                        selectedForUpload?.familiarKey !== undefined &&
+                        selectedForUpload?.itemId !== undefined
+                      }
+                      disabled={!silviaResult}
+                      onClick={() => {
+                        if (selectedForUpload?.file && selectedForUpload?.familiarKey && selectedForUpload?.itemId != null) {
+                          handleUploadForRow(
+                            selectedForUpload.file,
+                            selectedForUpload.familiarKey,
+                            selectedForUpload.itemId,
+                            selectedForUpload.itemLabel,
+                            replacingRow?.docId ?? undefined
+                          );
+                        }
+                      }}
+                    />
+                  </>
+                )}
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewerDocument && (
+        <div className={styles.viewerOverlay} aria-modal="true" role="dialog" aria-label="Visualizar documento">
+          <div className={styles.viewerWrap}>
+            <header className={styles.viewerHeader}>
+              <span className={styles.viewerTitle}>{viewerDocument.fileName}</span>
+              <button
+                type="button"
+                className={styles.viewerClose}
+                onClick={() => {
+                  setViewerDocument(null);
+                  setViewerUrl(null);
+                  setViewerSilvia(null);
+                }}
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </header>
+            <div className={styles.viewerContent}>
+              {viewerLoading && (
+                <div className={styles.viewerLoading}>
+                  <span>Carregando…</span>
+                </div>
+              )}
+              {!viewerLoading && viewerUrl && (
+                <div className={styles.viewerLayout}>
+                  <div className={styles.viewerDoc}>
+                    {viewerDocument.fileName.toLowerCase().endsWith(".pdf") ? (
+                      <iframe src={viewerUrl} title={viewerDocument.fileName} className={styles.viewerIframe} />
+                    ) : (
+                      <img src={viewerUrl} alt={viewerDocument.fileName} className={styles.viewerImg} />
+                    )}
+                  </div>
+                  <aside className={styles.viewerSide}>
+                    <h3 className={styles.viewerSideTitle}>Validações da Silvia</h3>
+                    {viewerSilvia ? (
+                      <div className={styles.viewerSideValidation}>
+                        <span className={viewerSilvia.approved ? styles.viewerSideStatusOk : styles.viewerSideStatusFail}>
+                          {viewerSilvia.approved ? "Aprovado" : "Reprovado"}
+                        </span>
+                        <p className={viewerSilvia.approved ? styles.analysisOk : styles.analysisFail}>
+                          {viewerSilvia.message}
+                        </p>
+                        {viewerSilvia.items && viewerSilvia.items.length > 0 && (
+                          <ul className={styles.viewerSideList}>
+                            {viewerSilvia.items.map((item, i) => (
+                              <li key={i} className={styles.viewerSideListItem}>
+                                <span className={styles.viewerSideItemLabel}>{item.label}</span>
+                                <span
+                                  className={
+                                    item.status === "aprovado"
+                                      ? styles.viewerSideItemOk
+                                      : item.status === "reprovado"
+                                        ? styles.viewerSideItemFail
+                                        : styles.viewerSideItemMuted
+                                  }
+                                >
+                                  {item.status === "aprovado"
+                                    ? "Aprovado"
+                                    : item.status === "reprovado"
+                                      ? "Reprovado"
+                                      : item.status === "nao_se_aplica"
+                                        ? "Não se aplica"
+                                        : "Não identificado"}
+                                </span>
+                                {item.detail && <span className={styles.viewerSideItemDetail}>{item.detail}</span>}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ) : (
+                      <p className={styles.viewerSideMuted}>
+                        Este documento ainda não foi analisado pela Silvia (ex.: qualidade ruim, tipo errado, resolução insuficiente).
+                      </p>
+                    )}
+                    <p className={styles.viewerSideHint}>
+                      A Silvia verifica legibilidade, tipo de arquivo, resolução mínima e outros critérios. Em caso de reprovação, envie outro arquivo.
+                    </p>
+                  </aside>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && <p className={styles.errorMsg}>{error}</p>}
     </section>
