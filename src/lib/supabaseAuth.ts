@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import { getSupabase } from "./supabaseClient";
 
 /**
  * supabaseAuth
@@ -14,7 +14,7 @@ export async function supabaseAuth(
   path: string,
   init: RequestInit = {}
 ) {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await getSupabase().auth.getSession();
   const token = data.session?.access_token;
 
   const headers = new Headers(init.headers);

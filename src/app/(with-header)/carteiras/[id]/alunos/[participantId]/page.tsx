@@ -155,7 +155,7 @@ export default function AlunoInscricaoPage() {
           </ul>
         </Section>
 
-        {fd.dados_pessoais && typeof fd.dados_pessoais === "object" && (
+        {Boolean(fd.dados_pessoais && typeof fd.dados_pessoais === "object") && (
           <Section title="1. Dados pessoais do candidato">
             {Object.entries(fd.dados_pessoais as Record<string, unknown>).map(
               ([k, v]) => (
@@ -169,7 +169,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.endereco_familia && typeof fd.endereco_familia === "object" && (
+        {Boolean(fd.endereco_familia && typeof fd.endereco_familia === "object") && (
           <Section title="2. Endereço da família">
             {Object.entries(fd.endereco_familia as Record<string, unknown>).map(
               ([k, v]) => (
@@ -183,7 +183,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.ensino_medio && typeof fd.ensino_medio === "object" && (
+        {Boolean(fd.ensino_medio && typeof fd.ensino_medio === "object") && (
           <Section title="3. Ensino médio">
             {Object.entries(fd.ensino_medio as Record<string, unknown>).map(
               ([k, v]) => (
@@ -197,7 +197,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.dados_familia && typeof fd.dados_familia === "object" && (
+        {Boolean(fd.dados_familia && typeof fd.dados_familia === "object") && (
           <Section title="4. Dados da família">
             <pre className={styles.jsonBlock}>
               {JSON.stringify(fd.dados_familia, null, 2)}
@@ -205,7 +205,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.renda_familiar && typeof fd.renda_familiar === "object" && (
+        {Boolean(fd.renda_familiar && typeof fd.renda_familiar === "object") && (
           <Section title="5. Renda familiar">
             <pre className={styles.jsonBlock}>
               {JSON.stringify(fd.renda_familiar, null, 2)}
@@ -213,7 +213,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.patrimonio_imoveis && typeof fd.patrimonio_imoveis === "object" && (
+        {Boolean(fd.patrimonio_imoveis && typeof fd.patrimonio_imoveis === "object") && (
           <Section title="6. Bens imóveis">
             <pre className={styles.jsonBlock}>
               {JSON.stringify(fd.patrimonio_imoveis, null, 2)}
@@ -221,7 +221,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.patrimonio_moveis && typeof fd.patrimonio_moveis === "object" && (
+        {Boolean(fd.patrimonio_moveis && typeof fd.patrimonio_moveis === "object") && (
           <Section title="7. Bens móveis">
             <pre className={styles.jsonBlock}>
               {JSON.stringify(fd.patrimonio_moveis, null, 2)}
@@ -229,7 +229,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.outros_patrimonios && typeof fd.outros_patrimonios === "object" && (
+        {Boolean(fd.outros_patrimonios && typeof fd.outros_patrimonios === "object") && (
           <Section title="8. Outros patrimônios">
             <pre className={styles.jsonBlock}>
               {JSON.stringify(fd.outros_patrimonios, null, 2)}
@@ -237,7 +237,7 @@ export default function AlunoInscricaoPage() {
           </Section>
         )}
 
-        {fd.declaracoes && typeof fd.declaracoes === "object" && (
+        {Boolean(fd.declaracoes && typeof fd.declaracoes === "object") && (
           <Section title="9. Declarações">
             <pre className={styles.jsonBlock}>
               {JSON.stringify(fd.declaracoes, null, 2)}

@@ -88,9 +88,16 @@ export default function FuncionariosPage() {
       .catch(() => setError("Não foi possível carregar o funcionário."));
   }
 
-  function handleUpdated(updated: FuncionarioItem) {
+  function handleUpdated(updated: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    cpf: string | null;
+    roles: string[];
+    created_at: string;
+  }) {
     setList((prev) =>
-      prev.map((f) => (f.id === updated.id ? updated : f))
+      prev.map((f) => (f.id === updated.id ? { ...f, ...updated } : f))
     );
     setEditingFuncionario(null);
   }

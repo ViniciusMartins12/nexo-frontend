@@ -16,9 +16,11 @@ type ProcessItem = {
   created_at: string;
 };
 
+type CarteiraItem = { id?: string; name?: string };
+
 type DashboardData = {
   activeProcesses: ProcessItem[];
-  carteiras: unknown[];
+  carteiras: CarteiraItem[];
   funcionariosCount?: number;
   candidatosCount?: number;
 };
@@ -180,9 +182,9 @@ export default function DashboardPage() {
           </p>
         ) : (
           <ul className={styles.list}>
-            {carteiras.map((c: { id?: string; name?: string }, i: number) => (
-              <li key={(c as { id?: string }).id ?? i} className={styles.cardItem}>
-                {(c as { name?: string }).name ?? "Carteira"}
+            {carteiras.map((c, i) => (
+              <li key={c.id ?? i} className={styles.cardItem}>
+                {c.name ?? "Carteira"}
               </li>
             ))}
           </ul>

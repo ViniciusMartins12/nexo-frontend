@@ -639,7 +639,7 @@ export default function CandidatoProcessoInscricaoPage() {
             </div>
             <Input
               label="E-mail do candidato"
-              type="email"
+              variant="email"
               value={dadosPessoais.email_candidato ?? ""}
               onChange={(e) => setDadosPessoais((p) => ({ ...p, email_candidato: e.target.value }))}
               placeholder="seu@email.com"
@@ -1324,7 +1324,7 @@ export default function CandidatoProcessoInscricaoPage() {
             </p>
 
             {(() => {
-              const candidatoNome = (dadosPessoais?.nome_completo as string)?.trim() || "Candidato";
+              const candidatoNome = (dadosPessoais?.nome_civil_social ?? "").trim() || "Candidato";
               const membros = dadosFamilia?.membros ?? [];
               const familiares: { key: string; label: string }[] = [
                 { key: "candidato", label: candidatoNome },
