@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/ui/header/header";
+import { SilviaRagWidget } from "@/components/silvia-rag/SilviaRagWidget";
 import { useUnreadMessages } from "@/lib/UnreadMessagesContext";
 import { useRealtimeMessages } from "@/lib/useRealtimeMessages";
 import { playNotificationSound } from "@/lib/playNotificationSound";
@@ -79,6 +80,7 @@ export default function CandidatoLayout({
     <div className={styles.wrapper}>
       <Header variant="candidate" />
       <main className={styles.main}>{children}</main>
+      <SilviaRagWidget enabled />
     </div>
   );
 }

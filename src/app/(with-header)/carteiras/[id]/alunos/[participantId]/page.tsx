@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.scss";
@@ -69,6 +69,10 @@ export default function AlunoInscricaoPage() {
   const [data, setData] = useState<InscricaoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewerDocument, setViewerDocument] = useState<{ id: string; fileName: string } | null>(null);
+  const [viewerDownloadUrl, setViewerDownloadUrl] = useState<string | null>(null);
+  const [viewerOnlineUrl, setViewerOnlineUrl] = useState<string | null>(null);
+  const [viewerLoading, setViewerLoading] = useState(false);
 
   useEffect(() => {
     if (!walletId || !participantId) return;
@@ -85,19 +89,59 @@ export default function AlunoInscricaoPage() {
       .finally(() => setLoading(false));
   }, [walletId, participantId]);
 
-  async function handleDownload(docId: string) {
+  function inferMimeType(fileName: string): string {
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith(".pdf")) return "application/pdf";
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+    if (lower.endsWith(".png")) return "image/png";
+    if (lower.endsWith(".webp")) return "image/webp";
+    if (lower.endsWith(".gif")) return "image/gif";
+    return "application/octet-stream";
+  }
+
+  async function openDocumentOnline(docId: string, fileName: string) {
     try {
+      setViewerLoading(true);
+      setViewerDocument({ id: docId, fileName });
+      setViewerDownloadUrl(null);
+      setViewerOnlineUrl(null);
       const res = await fetch(
         `${API_URL}/carteiras/${walletId}/participants/${participantId}/documents/${docId}/url`,
         { credentials: "include" }
       );
       if (!res.ok) throw new Error("Erro ao obter link");
       const { url } = await res.json();
-      window.open(url, "_blank");
+      setViewerDownloadUrl(url);
+
+      const fileRes = await fetch(url);
+      if (!fileRes.ok) throw new Error("Erro ao carregar arquivo");
+      const arrayBuffer = await fileRes.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: inferMimeType(fileName) });
+      const objectUrl = URL.createObjectURL(blob);
+      setViewerOnlineUrl(objectUrl);
     } catch {
+      setViewerDocument(null);
       setError("Erro ao abrir documento.");
+    } finally {
+      setViewerLoading(false);
     }
   }
+
+  useEffect(() => {
+    return () => {
+      if (viewerOnlineUrl) URL.revokeObjectURL(viewerOnlineUrl);
+    };
+  }, [viewerOnlineUrl]);
+
+  const viewerType = useMemo<"pdf" | "image" | "other">(() => {
+    if (!viewerDocument) return "other";
+    const lower = viewerDocument.fileName.toLowerCase();
+    if (lower.endsWith(".pdf")) return "pdf";
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".gif")) {
+      return "image";
+    }
+    return "other";
+  }, [viewerDocument]);
 
   if (loading) {
     return (
@@ -259,9 +303,9 @@ export default function AlunoInscricaoPage() {
                   <button
                     type="button"
                     className={styles.docBtn}
-                    onClick={() => handleDownload(d.id)}
+                    onClick={() => openDocumentOnline(d.id, d.fileName)}
                   >
-                    Baixar
+                    Abrir online
                   </button>
                 </li>
               ))}
@@ -269,6 +313,55 @@ export default function AlunoInscricaoPage() {
           )}
         </Section>
       </section>
+
+      {viewerDocument && (
+        <div className={styles.viewerOverlay} aria-modal="true" role="dialog" aria-label="Visualização de documento">
+          <div className={styles.viewerWrap}>
+            <header className={styles.viewerHeader}>
+              <span className={styles.viewerTitle}>{viewerDocument.fileName}</span>
+              <button
+                type="button"
+                className={styles.viewerClose}
+                onClick={() => {
+                  if (viewerOnlineUrl) URL.revokeObjectURL(viewerOnlineUrl);
+                  setViewerOnlineUrl(null);
+                  setViewerDownloadUrl(null);
+                  setViewerDocument(null);
+                }}
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </header>
+            <div className={styles.viewerBody}>
+              <div className={styles.viewerOnlinePane}>
+                {viewerLoading && <p className={styles.viewerLoading}>Carregando documento...</p>}
+                {!viewerLoading && viewerOnlineUrl && viewerType === "pdf" && (
+                  <iframe src={viewerOnlineUrl} title={viewerDocument.fileName} className={styles.viewerFrame} />
+                )}
+                {!viewerLoading && viewerOnlineUrl && viewerType === "image" && (
+                  <img src={viewerOnlineUrl} alt={viewerDocument.fileName} className={styles.viewerImage} />
+                )}
+                {!viewerLoading && viewerOnlineUrl && viewerType === "other" && (
+                  <p className={styles.viewerHint}>Pré-visualização indisponível para esse tipo de arquivo.</p>
+                )}
+              </div>
+              <aside className={styles.viewerActions}>
+                <a
+                  href={viewerDownloadUrl ?? "#"}
+                  className={styles.docBtn}
+                  download={viewerDocument.fileName}
+                  onClick={(e) => {
+                    if (!viewerDownloadUrl) e.preventDefault();
+                  }}
+                >
+                  Baixar
+                </a>
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

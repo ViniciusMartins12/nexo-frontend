@@ -96,26 +96,6 @@ export function Menu({ isOpen, onClose, variant = "company", isAtendente = false
               <span>Configurações</span>
             </Link>
           )}
-          <div className={styles.logoWrap}>
-            <Link href={isCandidate ? "/candidato" : isAtendente ? "/processos" : "/dashboard"} className={styles.logoSilviIALink} onClick={onClose} aria-label="SilvIA">
-              <span className={styles.logoSilviIA}>
-                <span className={styles.logoIcon} aria-hidden>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" stroke="url(#menuLogoGrad)" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-                    <circle cx="12" cy="12" r="2.5" fill="url(#menuLogoGrad)" />
-                    <defs>
-                      <linearGradient id="menuLogoGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#0795FF" />
-                        <stop offset="1" stopColor="#004AAD" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </span>
-                <span className={styles.logoWord}>Silv</span>
-                <span className={styles.logoIA}>IA</span>
-              </span>
-            </Link>
-          </div>
           <div className={styles.line}></div>
           <button
             type="button"

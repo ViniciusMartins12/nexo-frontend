@@ -6,24 +6,18 @@
   margin: 0 auto;
 }
 
-/* Aba de documentos – layout amplo e legível */
+/* Aba de documentos – mesmo painel das outras etapas, sem camada transparente */
 .documentsStepWrap {
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  padding: 24px 20px 32px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.12);
-  border-radius: 12px;
-  margin-bottom: 24px;
 }
 
 .documentsStepInner {
-  max-width: 1100px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 
 .documentsStepWrap .form {
@@ -31,14 +25,13 @@
 }
 
 .documentsStepWrap .formTitle {
-  font-size: 1.375rem;
   margin-bottom: 6px;
 }
 
 .documentsStepWrap .formDesc {
   margin-bottom: 20px;
   line-height: 1.5;
-  max-width: 640px;
+  max-width: 42rem;
 }
 
 .loading,
@@ -292,7 +285,11 @@
 }
 
 .fileLabel {
-  display: block;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
 }
 
 .fileInput,
@@ -303,27 +300,38 @@
 .fileButton {
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
-  font-size: 0.9375rem;
-  color: $color-secondary;
-  background: rgba(0, 74, 173, 0.2);
-  border: 1px dashed $color-primary;
-  border-radius: 6px;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 160px;
+  max-width: min(100%, 280px);
+  padding: 10px 16px;
+  box-sizing: border-box;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $color-text-primary;
+  background: $background-primary;
+  border: 1px solid $color-border-input;
+  border-radius: 8px;
   cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  word-break: break-word;
+  text-align: center;
 }
 
 .fileButton:hover {
-  background: rgba(0, 74, 173, 0.3);
+  border-color: $color-border-focus;
+  background: $background-secondary;
+  color: #e8e8e8;
 }
 
 .docList {
   list-style: none;
   padding: 0;
   margin: 0 0 24px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.2);
+  background: $background-primary;
 }
 
 .docListTitle {
@@ -337,10 +345,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-size: 0.875rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: $background-secondary;
 }
 
 .docItem:last-child {
@@ -391,11 +399,11 @@
 }
 
 .docFamiliarBlock {
-  padding: 20px 20px 24px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 20px 22px 24px;
+  background: $background-primary;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
 
 .docFamiliarBlock:first-child {
@@ -433,20 +441,21 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: $background-secondary;
 }
 
 .docChecklistItem {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: minmax(2rem, auto) minmax(0, 1fr) minmax(0, auto);
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
+  gap: 14px 16px;
+  padding: 14px 16px;
   font-size: 0.875rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: $background-secondary;
   transition: background 0.15s ease;
 }
 
@@ -455,7 +464,7 @@
 }
 
 .docChecklistItem:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: $background-primary;
 }
 
 .docItemNum {
@@ -477,6 +486,7 @@
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .docEnviado {
@@ -503,11 +513,19 @@
 
 .docEnviadoLabel {
   font-size: 0.8125rem;
-  color: $color-primary;
-  max-width: 220px;
+  color: $color-secondary;
+  max-width: min(240px, 36vw);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .docEnviadoLabel {
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
 }
 
 .docChecklistItemClickable {
@@ -527,10 +545,12 @@
   font-size: 0.8125rem;
   color: $color-text-placeholder;
   margin: 0 0 12px;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 16px;
+  background: $background-primary;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid $color-primary;
+  line-height: 1.45;
 }
 
 /* Modal de análise IA (Silvia) – card centralizado, sem cobrir a tela */
@@ -661,7 +681,7 @@
   height: 100%;
   max-width: 1400px;
   max-height: 90vh;
-  background: #1e1e1e;
+  background: $color-background;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
@@ -672,7 +692,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  background: #252525;
+  background: $background-primary;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
@@ -718,7 +738,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: #2d2d2d;
+  background: $background-secondary;
 }
 
 .previewDocImage {
@@ -742,7 +762,7 @@
 
 .previewDocSide {
   padding: 20px 24px;
-  background: #252525;
+  background: $background-primary;
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -797,6 +817,53 @@
 .docPreviewHint {
   font-size: 0.75rem;
   color: $color-text-placeholder;
+  line-height: 1.35;
+  max-width: 280px;
+}
+
+@media (max-width: 768px) {
+  .docChecklistWrap {
+    gap: 20px;
+  }
+
+  .docFamiliarBlock {
+    padding: 16px 16px 20px;
+  }
+
+  .docChecklistItem {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .docItemActions {
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  .documentsStepWrap .fileLabel {
+    width: 100%;
+  }
+
+  .fileButton {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .docPreviewHint {
+    max-width: none;
+  }
+
+  .docLabel {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .docItem {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 900px) {
@@ -827,7 +894,7 @@
   height: 100%;
   max-width: 1400px;
   max-height: 90vh;
-  background: #1e1e1e;
+  background: $color-background;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
@@ -839,7 +906,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 20px 12px 24px;
-  background: #252525;
+  background: $background-primary;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
@@ -881,7 +948,7 @@
   display: flex;
   align-items: stretch;
   justify-content: stretch;
-  background: #2d2d2d;
+  background: $background-secondary;
   position: relative;
 }
 
@@ -929,13 +996,13 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: #2d2d2d;
+  background: $background-secondary;
   min-height: 0;
 }
 
 .viewerSide {
   padding: 20px 24px;
-  background: #252525;
+  background: $background-primary;
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -961,6 +1028,25 @@
   font-size: 0.8125rem;
   color: $color-text-placeholder;
   margin: 0;
+}
+
+.viewerDownloadBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid $color-primary;
+  color: $color-primary;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.viewerDownloadBtn:hover {
+  background: rgba(7, 149, 255, 0.12);
 }
 
 .viewerSideValidation {

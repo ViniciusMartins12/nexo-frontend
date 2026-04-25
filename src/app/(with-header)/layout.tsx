@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Header } from "@/components/ui/header/header";
+import { SilviaRagWidget } from "@/components/silvia-rag/SilviaRagWidget";
 import { CompanyAuthProvider, useCompanyAuth } from "@/lib/CompanyAuthContext";
 import { useUnreadMessages } from "@/lib/UnreadMessagesContext";
 import { useRealtimeMessages } from "@/lib/useRealtimeMessages";
@@ -97,6 +98,7 @@ function WithHeaderLayoutInner({
     <>
       <Header />
       {children}
+      <SilviaRagWidget enabled />
     </>
   );
 }

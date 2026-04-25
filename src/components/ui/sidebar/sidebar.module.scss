@@ -1,3 +1,5 @@
+@use "../../../styles/colors" as *;
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -12,7 +14,7 @@
   left: 0;
   width: 280px;
   height: 100vh;
-  background: #252525;
+  background: $background-primary;
   padding: 24px;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
   border-radius: 8px;

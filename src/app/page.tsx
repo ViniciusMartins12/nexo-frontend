@@ -2,36 +2,62 @@ import Image from "next/image";
 import styles from "./page.module.scss";
 import Link from "next/link";
 
+const FEATURES = [
+  {
+    icon: "/icons/process.svg",
+    title: "Processos",
+    text: "Edital, etapas e prazos em um fluxo só.",
+  },
+  {
+    icon: "/icons/wallets.svg",
+    title: "Carteiras",
+    text: "Organize por responsável e processo.",
+  },
+  {
+    icon: "/icons/envelope.svg",
+    title: "Mensagens",
+    text: "Fale com candidatos em tempo real.",
+  },
+  {
+    icon: "/icons/folder-ui.svg",
+    title: "Docs + IA",
+    text: "Validação assistida e rastreabilidade.",
+  },
+] as const;
+
 export default function HomePage() {
   return (
     <main className={styles.container}>
-      {/* HEADER */}
       <header className={styles.header}>
         <Link href="/" className={styles.logo}>
-          <Image src="/svg/logo.svg" alt="Nexo" width={90} height={32} />
+          <Image src="/svg/logo.svg" alt="Nexo" width={100} height={36} priority />
         </Link>
 
-        <nav className={styles.nav}>
+        <nav className={styles.nav} aria-label="Seções">
           <a href="#produto">Produto</a>
           <a href="#planos">Planos</a>
-          <a href="#negocio">Negócio</a>
-          <a href="#ajuda">Ajuda</a>
+          <a href="#contato">Contato</a>
         </nav>
+
+        <div className={styles.headerActions}>
+          <Link href="/login" className={styles.headerLink}>
+            Entrar
+          </Link>
+          <Link href="/cadastro-empresa" className={styles.headerCta}>
+            Criar conta
+          </Link>
+        </div>
       </header>
 
-      {/* HERO */}
       <section className={styles.hero}>
+        <p className={styles.heroEyebrow}>Instituições · processos seletivos</p>
         <h1>Gestão de documentos com IA</h1>
-        <h2 className={styles.subtitle}>
-          Envio, organização e rastreabilidade em um só lugar.
-        </h2>
-        <p className={styles.description}>
-          Uma plataforma única para gestão de documentos, automação com IA e
-          atendimento ao usuário em tempo real.
+        <p className={styles.heroLead}>
+          Um lugar para processos, candidatos e documentação — sem dispersão.
         </p>
         <div className={styles.cta}>
           <Link href="/cadastro-empresa" className={styles.outline}>
-            Criar conta
+            Começar
           </Link>
           <Link href="/login" className={styles.primary}>
             Entrar
@@ -39,88 +65,84 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PRODUTO */}
       <section id="produto" className={styles.section}>
-        <h2 className={styles.sectionTitle}>Produto</h2>
-        <p className={styles.sectionDesc}>
-          O Nexo centraliza processos seletivos, candidatos e comunicação.
-          Crie processos e carteiras, envie editais, receba inscrições e
-          documentação, e converse com candidatos em tempo real.
-        </p>
-        <ul className={styles.featureList}>
-          <li>Processos seletivos com prazos e etapas</li>
-          <li>Carteiras por responsável e processo</li>
-          <li>Mensagens em tempo real com candidatos</li>
-          <li>Gestão de documentos e automação com IA</li>
+        <div className={styles.sectionHead}>
+          <h2 className={styles.sectionTitle}>O que você ganha</h2>
+          <p className={styles.sectionKicker}>Menos retrabalho, mais controle.</p>
+        </div>
+
+        <ul className={styles.featureGrid}>
+          {FEATURES.map((f) => (
+            <li key={f.title} className={styles.featureCard}>
+              <div className={styles.featureIcon} aria-hidden>
+                <Image src={f.icon} alt="" width={28} height={28} />
+              </div>
+              <h3 className={styles.featureTitle}>{f.title}</h3>
+              <p className={styles.featureText}>{f.text}</p>
+            </li>
+          ))}
         </ul>
       </section>
 
-      {/* PLANOS */}
-      <section id="planos" className={styles.section}>
-        <h2 className={styles.sectionTitle}>Planos</h2>
-        <p className={styles.sectionDesc}>
-          Escolha o plano ideal para o tamanho da sua operação. Valores mensais
-          com opção de cobrança anual com desconto.
-        </p>
+      <section id="planos" className={styles.sectionMuted}>
+        <div className={styles.sectionHead}>
+          <h2 className={styles.sectionTitle}>Planos</h2>
+          <p className={styles.sectionKicker}>Mensal ou anual — escolha no cadastro.</p>
+        </div>
+
         <div className={styles.planGrid}>
-          <div className={styles.planCard}>
+          <article className={styles.planCard}>
             <h3 className={styles.planName}>Starter</h3>
-            <p className={styles.planPrice}>R$ 299/mês</p>
+            <p className={styles.planPrice}>
+              R$ 299<span>/mês</span>
+            </p>
             <p className={styles.planBadge}>ou R$ 2.999/ano</p>
-            <ul className={styles.planDesc}>
-              <li>Até 2 processos por ano</li>
-              <li>Até 300 candidatos por ano</li>
-              <li>1 carteira e até 2 atendentes</li>
-              <li>Até 20 GB para documentos</li>
+            <ul className={styles.planBullets}>
+              <li>2 processos/ano · 300 candidatos</li>
+              <li>1 carteira · 2 atendentes · 20 GB</li>
             </ul>
-          </div>
-          <div className={styles.planCard}>
+          </article>
+
+          <article className={`${styles.planCard} ${styles.planFeatured}`}>
+            <span className={styles.planRibbon}>Popular</span>
             <h3 className={styles.planName}>Profissional</h3>
-            <p className={styles.planPrice}>R$ 799/mês</p>
+            <p className={styles.planPrice}>
+              R$ 799<span>/mês</span>
+            </p>
             <p className={styles.planBadge}>ou R$ 7.999/ano</p>
-            <ul className={styles.planDesc}>
-              <li>Até 6 processos por ano</li>
-              <li>Até 1.500 candidatos por ano</li>
-              <li>Até 5 carteiras e 10 atendentes</li>
-              <li>Até 100 GB para documentos</li>
+            <ul className={styles.planBullets}>
+              <li>6 processos/ano · 1.500 candidatos</li>
+              <li>5 carteiras · 10 atendentes · 100 GB</li>
               <li>Suporte prioritário</li>
             </ul>
-          </div>
-          <div className={styles.planCard}>
+          </article>
+
+          <article className={styles.planCard}>
             <h3 className={styles.planName}>Enterprise</h3>
-            <p className={styles.planPrice}>A partir de R$ 2.200/mês</p>
-            <p className={styles.planBadge}>valores sob proposta</p>
-            <ul className={styles.planDesc}>
-              <li>Processos e candidatos em grande volume</li>
-              <li>Limites de carteiras e atendentes sob medida</li>
-              <li>Mais storage, performance dedicados e backups automáticos</li>
-              <li>IA para aferição e validação documental</li>
-              <li>SLA, integrações e implantação customizada</li>
+            <p className={styles.planPrice}>A partir de R$ 2.200<span>/mês</span></p>
+            <p className={styles.planBadge}>sob medida</p>
+            <ul className={styles.planBullets}>
+              <li>Volume alto · limites flexíveis</li>
+              <li>IA documental · SLA · integrações</li>
             </ul>
-          </div>
+          </article>
         </div>
       </section>
 
-      {/* NEGÓCIO */}
-      <section id="negocio" className={styles.section}>
-        <h2 className={styles.sectionTitle}>Negócio</h2>
-        <p className={styles.sectionDesc}>
-          O Nexo foi pensado para instituições que realizam processos seletivos
-          e precisam de organização, rastreabilidade e atendimento humanizado.
-          Reduza retrabalho e centralize toda a jornada do candidato.
+      <section id="contato" className={styles.sectionNarrow}>
+        <p className={styles.stripText}>
+          Feito para quem precisa de{' '}
+          <strong>organização</strong> e{' '}
+          <strong>rastreabilidade</strong> na jornada do candidato.
+        </p>
+        <p className={styles.helpLine}>
+          Dúvidas? <Link href="/login">Entre</Link> ou cadastre-se — candidatos pela opção no login.
         </p>
       </section>
 
-      {/* AJUDA */}
-      <section id="ajuda" className={styles.section}>
-        <h2 className={styles.sectionTitle}>Ajuda</h2>
-        <p className={styles.sectionDesc}>
-          Dúvidas sobre planos ou funcionalidades? Entre em contato pelo
-          e-mail da sua conta ou fale com seu administrador. Para criar conta
-          empresa, use &quot;Criar conta&quot; no topo; candidatos podem se
-          cadastrar pela opção &quot;Fazer cadastro&quot; na tela de login.
-        </p>
-      </section>
+      <footer className={styles.footer}>
+        <span>Nexo</span>
+      </footer>
     </main>
   );
 }
